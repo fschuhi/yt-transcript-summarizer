@@ -32,3 +32,6 @@ Thumbs.db
 
 # project specific
 test_main.http
+update-ecr.bat
+update-requirements.bat
+aws-secret-usage-snippet.py
