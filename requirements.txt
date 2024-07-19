@@ -1,0 +1,10 @@
+youtube_transcript_api
+openai
+python-dotenv
+fastapi
+uvicorn
+jinja2
+python-multipart
+pydantic
+colorama
+starlette
