@@ -1,45 +1,47 @@
-# main.py
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import Response
-from starlette.types import Scope
+from fastapi.security import APIKeyHeader
+from starlette.status import HTTP_403_FORBIDDEN
 from pydantic import BaseModel
 from youtube_utils import get_youtube_transcript
 import openai_utils
 import re
 from datetime import datetime
 from typing import Optional
+import os
+from dotenv import load_dotenv
 
 import colorama
+
 colorama.init()
+
+load_dotenv()
 
 app = FastAPI()
 
-
-# not needed because we use StaticFiles()
-class CustomStaticFiles(StaticFiles):
-    async def get_response(self, path: str, scope: Scope) -> Response:
-        response = await super().get_response(path, scope)
-        if path.endswith('.js'):
-            response.headers['Cache-Control'] = 'no-cache, max-age=0'
-        else:
-            response.headers['Cache-Control'] = 'public, max-age=3600'
-        return response
-
-
 # Mount static files
-# app.mount("/static", CustomStaticFiles(directory="static"), name="static")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Setup Jinja2 templates
 templates = Jinja2Templates(directory="templates")
+
+API_KEY = os.getenv("API_KEY")  # Load from .env file
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 class SummarizeRequest(BaseModel):
     video_url: str
     summary_length: int
     used_model: str
+
+
+def get_api_key(api_key: str = Depends(api_key_header)):
+    if api_key == API_KEY:
+        return api_key
+    raise HTTPException(
+        status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"
+    )
 
 
 def extract_video_id(input_string: str) -> Optional[str]:
@@ -65,10 +67,14 @@ async def read_root(request: Request):
     return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
 
 
+@app.post("/login")
+async def login(api_key: str = Depends(get_api_key)):
+    return {"access_token": api_key, "token_type": "bearer"}
+
+
 @app.post("/summarize")
-async def summarize(summarize_request: SummarizeRequest):
+async def summarize(summarize_request: SummarizeRequest, api_key: str = Depends(get_api_key)):
     print("Received request:", summarize_request)
-    # ... rest of the function remains the same
 
     video_id = extract_video_id(summarize_request.video_url)
     if not video_id:
@@ -90,4 +96,5 @@ async def summarize(summarize_request: SummarizeRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

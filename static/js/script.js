@@ -1,7 +1,7 @@
-// Use strict mode for better error catching and performance
 'use strict';
 
-// Use modern syntax: arrow functions, const/let instead of var
+let accessToken = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded and parsed');
     const form = document.getElementById('summarize-form');
@@ -14,10 +14,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Separate the form submission logic into its own function
+async function login() {
+    const apiKey = prompt("Enter your API key:");
+    if (!apiKey) return false;
+
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'X-API-Key': apiKey
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            accessToken = data.access_token;
+            return true;
+        } else {
+            alert("Invalid API key");
+            return false;
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        return false;
+    }
+}
+
 async function handleSubmit(e) {
     e.preventDefault();
     console.log('Form submitted');
+
+    if (!accessToken) {
+        const loggedIn = await login();
+        if (!loggedIn) return;
+    }
 
     const videoUrl = document.getElementById('video_url').value;
     const summaryLength = document.getElementById('summary_length').value;
@@ -36,12 +66,12 @@ async function handleSubmit(e) {
     }
 }
 
-// Separate API call into its own function
 async function submitSummarizeRequest(videoUrl, summaryLength, usedModel) {
     const response = await fetch('/summarize', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-API-Key': accessToken
         },
         body: JSON.stringify({
             video_url: videoUrl,
@@ -58,7 +88,6 @@ async function submitSummarizeRequest(videoUrl, summaryLength, usedModel) {
     return response.json();
 }
 
-// Separate display logic into its own function
 function displaySummary(result, summaryDiv) {
     if ('summary' in result && 'word_count' in result) {
         const summaryContent = document.getElementById('summary-content');
