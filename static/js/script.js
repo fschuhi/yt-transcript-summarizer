@@ -46,6 +46,7 @@ async function handleSubmit(e) {
 
     if (!accessToken) {
         const loggedIn = await login();
+        console.log()
         if (!loggedIn) return;
     }
 
