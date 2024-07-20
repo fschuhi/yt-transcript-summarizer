@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Optional
 import os
 from dotenv import load_dotenv
+import logging
 
 import colorama
 
@@ -22,6 +23,18 @@ app = FastAPI()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+
+# Access the logger
+logger = logging.getLogger(__name__)
 
 # Setup Jinja2 templates
 templates = Jinja2Templates(directory="templates")
@@ -63,6 +76,7 @@ def extract_video_id(input_string: str) -> Optional[str]:
 
 @app.get("/")
 async def read_root(request: Request):
+    logger.info("Received request for root endpoint")
     timestamp = datetime.now().timestamp()
     return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
 
