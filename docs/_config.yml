@@ -1,3 +1,5 @@
 theme: jekyll-theme-minimal
 title: yt-transcript-summarizer
 description: A minimal summarizer for YouTube videos
+include:
+  -  "../requirements.txt"
