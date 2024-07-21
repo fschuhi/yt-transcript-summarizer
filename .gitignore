@@ -36,3 +36,4 @@ update-ecr.bat
 update-requirements.bat
 aws-secret-usage-snippet.py
 *.bak
+tools/
