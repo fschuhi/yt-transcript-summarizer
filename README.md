@@ -1,7 +1,11 @@
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://fschuhi.github.io/yt-transcript-summarizer/)
+
 # YouTube Transcript Summarizer
 
 ## Description
 Does what it says: summarize a YT video, using the video's transcript.
+
+For additional documentation, please visit the [GitHub Pages site](https://fschuhi.github.io/yt-transcript-summarizer/).
 
 ## Installation
 - See _run.bat_ for how to start the server.
