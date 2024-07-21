@@ -83,6 +83,7 @@ async def read_root(request: Request):
 
 @app.get("/health")
 async def health_check():
+    logger.info("Health check endpoint called")
     return {"status": "healthy"}
 
 
