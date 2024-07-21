@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import APIKeyHeader
 from starlette.status import HTTP_403_FORBIDDEN
 from pydantic import BaseModel
-from youtube_utils import get_youtube_transcript
+from youtube_utils import get_youtube_data
 import openai_utils
 import re
 from datetime import datetime
@@ -83,7 +83,7 @@ async def read_root(request: Request):
 
 @app.get("/health")
 async def health_check():
-    logger.info("Health check endpoint called")
+    # logger.info("Health check endpoint called")
     return {"status": "healthy"}
 
 
@@ -94,23 +94,24 @@ async def login(api_key: str = Depends(get_api_key)):
 
 @app.post("/summarize")
 async def summarize(summarize_request: SummarizeRequest, api_key: str = Depends(get_api_key)):
-    print("Received request:", summarize_request)
+    logger.info(f"Received summarize request: {summarize_request}")
 
     video_id = extract_video_id(summarize_request.video_url)
     if not video_id:
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
-    transcript = get_youtube_transcript(video_id, include_timestamps=False)
-    if not transcript:
+    youtube_data = get_youtube_data(video_id)
+    if not youtube_data['transcript']:
         raise HTTPException(status_code=400, detail="Failed to retrieve transcript")
 
-    full_text = ' '.join(transcript)
-    summary = openai_utils.summarize_text(full_text, summarize_request.summary_length, summarize_request.used_model)
+    full_text = ' '.join(youtube_data['transcript'])
+    summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length, summarize_request.used_model)
     word_count = len(summary.split())
 
     return {
         'summary': summary,
-        'word_count': word_count
+        'word_count': word_count,
+        'metadata': youtube_data['metadata']
     }
 
 

@@ -1,5 +1,31 @@
 /* static/css/styles.css */
 
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.logo {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+/* Adjust your existing styles as needed */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
@@ -21,6 +47,7 @@ form {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
 }
 
 label {
@@ -53,17 +80,57 @@ button:hover {
     background-color: #2980b9;
 }
 
-#summary {
-    margin-top: 30px;
-    background-color: #f8f9fa;  /* Light gray background */
+.box {
+    background-color: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
-#summary h2 {
+.box h2 {
     color: #2c3e50;
     margin-bottom: 15px;
+}
+
+.main-info-box {
+    padding: 10px 20px;
+}
+
+.main-info-box h2 {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+}
+
+.main-info-box p {
+    margin: 5px 0;
+}
+
+.info-label {
+    color: #666;
+    font-weight: bold;
+}
+
+.summary-box p {
+    margin-bottom: 10px;
+}
+
+#word-count {
+    margin-top: 20px;
+    font-style: italic;
+    font-size: 14px;
+    color: #666;
+}
+
+.date-counts-box p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.long-desc-box p {
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-line;
 }
 
 #summary-content {
@@ -71,11 +138,8 @@ button:hover {
     line-height: 1.8;
 }
 
-#summary-content p {
-    margin-bottom: 15px;  /* Add space between paragraphs */
-}
-
-#word-count {
-    margin-top: 15px;
+#loading {
+    text-align: center;
     font-style: italic;
+    color: #666;
 }

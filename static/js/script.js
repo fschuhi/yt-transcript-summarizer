@@ -53,17 +53,17 @@ async function handleSubmit(e) {
     const videoUrl = document.getElementById('video_url').value;
     const summaryLength = document.getElementById('summary_length').value;
     const usedModel = document.getElementById('used_model').value;
-    const summaryDiv = document.getElementById('summary');
+    const resultDiv = document.getElementById('result');
 
     // Clear previous content
-    summaryDiv.innerHTML = '<h2>Summary</h2><div id="summary-content">Summarizing...</div>';
+    resultDiv.innerHTML = '<div id="loading">Summarizing...</div>';
 
     try {
         const result = await submitSummarizeRequest(videoUrl, summaryLength, usedModel);
-        displaySummary(result, summaryDiv);
+        displayResult(result, resultDiv);
     } catch (error) {
         console.error('Error:', error);
-        summaryDiv.innerHTML += `<p>Error: ${error.message}</p>`;
+        resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
     }
 }
 
@@ -89,19 +89,65 @@ async function submitSummarizeRequest(videoUrl, summaryLength, usedModel) {
     return response.json();
 }
 
-function displaySummary(result, summaryDiv) {
-    if ('summary' in result && 'word_count' in result) {
-        const summaryContent = document.getElementById('summary-content');
-        // Split the summary into paragraphs
-        const paragraphs = result.summary.split('\n\n');
-        summaryContent.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+function displayResult(result, resultDiv) {
+    resultDiv.innerHTML = '';
 
-        // Add word count
-        const wordCountElem = document.createElement('p');
-        wordCountElem.id = 'word-count';
-        wordCountElem.textContent = `Word count: ${result.word_count}`;
-        summaryDiv.appendChild(wordCountElem);
-    } else {
-        summaryDiv.innerHTML += '<p>Summary or word count not available in the response.</p>';
-    }
+    // Create main info box
+    const mainInfoBox = createBox('main-info-box');
+
+    // Title
+    const titleElem = document.createElement('h2');
+    titleElem.textContent = result.metadata.title;
+    mainInfoBox.appendChild(titleElem);
+
+    // Channel
+    const channelElem = document.createElement('p');
+    channelElem.innerHTML = '<span class="info-label">Channel:</span> ' + result.metadata.channel_title;
+    mainInfoBox.appendChild(channelElem);
+
+    // Short description
+    const shortDescElem = document.createElement('p');
+    const firstLine = result.metadata.description.split('\n')[0];
+    shortDescElem.innerHTML = '<span class="info-label">Description (1st line):</span> ' + firstLine;
+    mainInfoBox.appendChild(shortDescElem);
+
+    resultDiv.appendChild(mainInfoBox);
+
+    // Summary box
+    const summaryBox = createBox('summary-box');
+    summaryBox.innerHTML = '<h2>Summary</h2>';
+    const summaryContent = document.createElement('div');
+    summaryContent.id = 'summary-content';
+    const paragraphs = result.summary.split('\n\n');
+    summaryContent.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+    summaryBox.appendChild(summaryContent);
+
+    // Word count
+    const wordCountElem = document.createElement('p');
+    wordCountElem.id = 'word-count';
+    wordCountElem.textContent = `Word count: ${result.word_count}`;
+    summaryBox.appendChild(wordCountElem);
+
+    resultDiv.appendChild(summaryBox);
+
+    // Date & counts box
+    const dateCountsBox = createBox('date-counts-box');
+    dateCountsBox.innerHTML = `
+        <p>Published: ${new Date(result.metadata.publish_date).toLocaleDateString()}</p>
+        <p>Views: ${result.metadata.view_count}</p>
+        <p>Likes: ${result.metadata.like_count}</p>
+        <p>Comments: ${result.metadata.comment_count}</p>
+    `;
+    resultDiv.appendChild(dateCountsBox);
+
+    // Long description box
+    const longDescBox = createBox('long-desc-box');
+    longDescBox.innerHTML = `<p>${result.metadata.description.replace(/\n/g, '<br>')}</p>`;
+    resultDiv.appendChild(longDescBox);
+}
+
+function createBox(className) {
+    const box = document.createElement('div');
+    box.className = `box ${className}`;
+    return box;
 }
