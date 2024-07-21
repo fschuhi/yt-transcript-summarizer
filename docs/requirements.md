@@ -9,10 +9,10 @@ title: Requirements
 
 Below is the current list of Python dependencies for this project:
 
-```{% raw %}
-
-{% include_relative ../requirements.txt %}
-
+```
+{% raw %}
+{% include requirements.txt %}
+{% raw %}
 ```
 
 ## Other Requirements

@@ -1,0 +1,11 @@
+colorama
+datetime
+fastapi
+jinja2
+openai
+pydantic
+python-dotenv
+python-multipart
+starlette
+uvicorn
+youtube_transcript_api
