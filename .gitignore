@@ -37,3 +37,4 @@ update-requirements.bat
 aws-secret-usage-snippet.py
 *.bak
 tools/
+tmp/

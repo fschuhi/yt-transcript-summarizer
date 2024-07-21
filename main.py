@@ -81,6 +81,11 @@ async def read_root(request: Request):
     return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
 
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+
 @app.post("/login")
 async def login(api_key: str = Depends(get_api_key)):
     return {"access_token": api_key, "token_type": "bearer"}
