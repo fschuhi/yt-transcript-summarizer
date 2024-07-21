@@ -10,8 +10,10 @@ title: Requirements
 Below is the current list of Python dependencies for this project:
 
 ```{% raw %}
+
 {% include_relative ../requirements.txt %}
-```{% endraw %}
+
+```
 
 ## Other Requirements
 
