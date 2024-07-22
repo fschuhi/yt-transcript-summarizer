@@ -145,6 +145,7 @@ async def summarize(summarize_request: SummarizeRequest, api_key: str = Depends(
     summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length,
                                           summarize_request.used_model)
     word_count = len(summary.split())
+    print(word_count)
 
     return {
         'summary': summary,

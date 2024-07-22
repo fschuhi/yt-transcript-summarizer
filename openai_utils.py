@@ -8,6 +8,7 @@ from openai import OpenAI
 load_dotenv()
 
 # Initialize the OpenAI client
+print(os.getenv("OPENAI_API_KEY"))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -53,6 +54,7 @@ def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = 
             stop=None,
             temperature=0.7,
         )
+        # print(response)
         summary = response.choices[0].message.content.strip()
 
         return summary

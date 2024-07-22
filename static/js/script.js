@@ -135,14 +135,39 @@ function displayResult(result, resultDiv) {
 
     resultDiv.appendChild(mainInfoBox);
 
-    // ... (rest of the function remains the same)
+    // Summary box
+    const summaryBox = createBox('summary-box');
+    summaryBox.innerHTML = '<h2>Summary</h2>';
+    const summaryContent = document.createElement('div');
+    summaryContent.id = 'summary-content';
+    const paragraphs = result.summary.split('\n\n');
+    summaryContent.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+    summaryBox.appendChild(summaryContent);
+
+    // Word count
+    const wordCountElem = document.createElement('p');
+    wordCountElem.id = 'word-count';
+    wordCountElem.textContent = `Word count: ${result.word_count}`;
+    summaryBox.appendChild(wordCountElem);
+
+    resultDiv.appendChild(summaryBox);
+
+    // Date & counts box
+    const dateCountsBox = createBox('date-counts-box');
+    dateCountsBox.innerHTML = `
+        <p>Published: ${new Date(result.metadata.publish_date).toLocaleDateString()}</p>
+        <p>Views: ${result.metadata.view_count}</p>
+        <p>Likes: ${result.metadata.like_count}</p>
+        <p>Comments: ${result.metadata.comment_count}</p>
+    `;
+    resultDiv.appendChild(dateCountsBox);
+
+    // Long description box
+    const longDescBox = createBox('long-desc-box');
+    longDescBox.innerHTML = `<p>${result.metadata.description.replace(/\n/g, '<br>')}</p>`;
+    resultDiv.appendChild(longDescBox);
 }
 
-/**
- * Creates a div element with the given class name.
- * @param {string} className - The class name to apply to the div.
- * @returns {HTMLDivElement} The created div element.
- */
 function createBox(className) {
     const box = document.createElement('div');
     box.className = `box ${className}`;
