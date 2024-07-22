@@ -50,6 +50,13 @@ class SummarizeRequest(BaseModel):
 
 
 def get_api_key(api_key: str = Depends(api_key_header)):
+    """
+    Dependency function to validate the API key, using FastAPI's Depends.
+
+    :param api_key: The API key to validate
+    :return: The API key if valid
+    :raises HTTPException: 403 Forbidden if the API key is invalid
+    """
     if api_key == API_KEY:
         return api_key
     raise HTTPException(
@@ -58,6 +65,12 @@ def get_api_key(api_key: str = Depends(api_key_header)):
 
 
 def extract_video_id(input_string: str) -> Optional[str]:
+    """
+    Extract YouTube video ID from URL or video ID string.
+
+    :param input_string: The input URL or video ID string
+    :return: The extracted video ID, or None if invalid
+    """
     patterns = [
         r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)",
         r"(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)",
@@ -76,6 +89,12 @@ def extract_video_id(input_string: str) -> Optional[str]:
 
 @app.get("/")
 async def read_root(request: Request):
+    """
+    Render the summarizer form template with current timestamp.
+
+    :param request: The incoming request
+    :return: TemplateResponse with the summarizer form
+    """
     logger.info("Received request for root endpoint")
     timestamp = datetime.now().timestamp()
     return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
@@ -83,17 +102,35 @@ async def read_root(request: Request):
 
 @app.get("/health")
 async def health_check():
-    # logger.info("Health check endpoint called")
+    """
+    Return the health status of the application, called by AWS.
+
+    :return: A dictionary with the status
+    """
     return {"status": "healthy"}
 
 
 @app.post("/login")
 async def login(api_key: str = Depends(get_api_key)):
+    """
+    Validate API key using the get_api_key dependency and return access token if valid.
+
+    :param api_key: The API key to validate
+    :return: A dictionary with the access token and token type
+    """
     return {"access_token": api_key, "token_type": "bearer"}
 
 
 @app.post("/summarize")
 async def summarize(summarize_request: SummarizeRequest, api_key: str = Depends(get_api_key)):
+    """
+    Summarize YouTube video with ChatGPT.
+
+    :param summarize_request: The request body containing video URL and summary parameters
+    :param api_key: The API key for authentication
+    :return: A dictionary with the summary, word count, and YouTube metadata
+    :raises HTTPException: 400 Bad Request if the YouTube URL is invalid or transcript retrieval fails
+    """
     logger.info(f"Received summarize request: {summarize_request}")
 
     video_id = extract_video_id(summarize_request.video_url)
@@ -105,7 +142,8 @@ async def summarize(summarize_request: SummarizeRequest, api_key: str = Depends(
         raise HTTPException(status_code=400, detail="Failed to retrieve transcript")
 
     full_text = ' '.join(youtube_data['transcript'])
-    summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length, summarize_request.used_model)
+    summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length,
+                                          summarize_request.used_model)
     word_count = len(summary.split())
 
     return {

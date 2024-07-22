@@ -15,7 +15,7 @@ load_dotenv()
 
 # Get the YouTube API key from environment variables
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
-print(f"YouTube API Key: {YOUTUBE_API_KEY[:5]}...") # Print first 5 characters for security
+print(f"YouTube API Key: {YOUTUBE_API_KEY[:5]}...")  # Print first 5 characters for security
 
 
 def get_youtube_transcript(video_id: str, include_timestamps: bool = True) -> Union[
