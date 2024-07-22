@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock
 
 class MockOpenAI:
     class ChatCompletion:
@@ -48,19 +49,22 @@ class MockYouTubeBuilder:
                 return MockExecute()
         return MockVideos()
 
-
-pytest.fixture(autouse=True)
-
-
+@pytest.fixture(autouse=True)
 def mock_dependencies(monkeypatch):
     monkeypatch.setattr('openai_utils.OpenAI', MockOpenAI)
     monkeypatch.setattr('youtube_utils.YouTubeTranscriptApi', MockYouTubeTranscriptApi)
     monkeypatch.setattr('youtube_utils.build', MockYouTubeBuilder)
 
-    # Mock os.getenv to return a dummy API key
+    # Mock os.getenv to return dummy API keys
     def mock_getenv(key, default=None):
         if key == "YOUTUBE_API_KEY":
-            return "dummy_api_key"
+            return "dummy_youtube_api_key"
+        elif key == "OPENAI_API_KEY":
+            return "dummy_openai_api_key"
         return default
 
     monkeypatch.setattr('os.getenv', mock_getenv)
+
+    # Mock OpenAI client initialization
+    mock_openai_client = MagicMock()
+    monkeypatch.setattr('openai_utils.OpenAI', lambda api_key: mock_openai_client)
