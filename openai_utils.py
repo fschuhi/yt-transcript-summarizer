@@ -8,9 +8,14 @@ from openai import OpenAI
 load_dotenv()
 
 # Initialize the OpenAI client
-print(os.getenv("OPENAI_API_KEY"))
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def get_openai_client():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+    return OpenAI(api_key=api_key)
 
+# Initialize the OpenAI client
+client = get_openai_client()
 
 def word_count(s):
     return len(re.findall(r'\w+', s))

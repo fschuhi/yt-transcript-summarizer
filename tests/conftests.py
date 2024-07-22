@@ -51,7 +51,6 @@ class MockYouTubeBuilder:
 
 @pytest.fixture(autouse=True)
 def mock_dependencies(monkeypatch):
-    monkeypatch.setattr('openai_utils.OpenAI', MockOpenAI)
     monkeypatch.setattr('youtube_utils.YouTubeTranscriptApi', MockYouTubeTranscriptApi)
     monkeypatch.setattr('youtube_utils.build', MockYouTubeBuilder)
 
@@ -67,4 +66,5 @@ def mock_dependencies(monkeypatch):
 
     # Mock OpenAI client initialization
     mock_openai_client = MagicMock()
-    monkeypatch.setattr('openai_utils.OpenAI', lambda api_key: mock_openai_client)
+    mock_openai_client.chat.completions.create.return_value = MockOpenAI.ChatCompletion.create()
+    monkeypatch.setattr('openai_utils.get_openai_client', lambda: mock_openai_client)
