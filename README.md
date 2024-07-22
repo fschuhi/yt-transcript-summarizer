@@ -1,36 +1,54 @@
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://fschuhi.github.io/yt-transcript-summarizer/)
-
 # YouTube Transcript Summarizer
 
-## Description
-Does what it says: summarize a YT video, using the video's transcript.
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://fschuhi.github.io/yt-transcript-summarizer/)
 
-For additional documentation, please visit the [GitHub Pages site](https://fschuhi.github.io/yt-transcript-summarizer/).
+A tool to summarize YouTube videos using their transcripts.
 
-## Installation
-- See _run.bat_ for how to start the server.
-- Server listens on 127.0.0.1:8000.
+## Quick Start
 
-## Usage
-- The UI is self-explanatory. Just specify which video to summarize and select summary length and model.
-- **IMPORTANT**: You need an .env in the project root, containing your OpenAI API key.
-- Note that summarize will fail if the video doesn't have captions (CC turned off).
+1. Clone the repository
+2. Install dependencies: `pip install -r requirements.txt`
+3. Set up your `.env` file (see Configuration)
+4. Run the server: `python main.py`
+5. Open `http://127.0.0.1:8000` in your browser
 
 ## Features
-- Only a few ChatGPT models are available. You would usually use the GPT 4o mini.
-- The code tries to instruct ChatGPT to create a summary which length should be  close to what you asked it. It can vary, though.  
 
-## Dependencies
-- youtube_transcript_api
-- openai
-- python-dotenv
-- fastapi
-- uvicorn
-- jinja2
-- python-multipart
-- pydantic
-- colorama
-- starlette
+- Summarize YouTube videos using AI models
+- Adjustable summary length
+- Support for multiple ChatGPT models
+- Web-based user interface
+
+## Configuration
+
+Create a `.env` file in the project root with the following:
+```
+API_KEY=your_api_key_for_the_summarizer_app
+OPENAI_API_KEY=your_openai_api_key
+YOUTUBE_API_KEY=your_youtube_api_key
+```
+
+## Usage
+
+1. Enter a YouTube video URL
+2. Select desired summary length and AI model
+3. Click "Summarize"
+
+Note: Summarization will fail if the video doesn't have captions (CC) available.
+
+## Development
+
+This project uses:
+- FastAPI for the backend
+- JavaScript for the frontend
+- GitHub Pages for documentation
+
+For more details on the project structure, authentication flow, and API dependencies, please refer to the [documentation](https://fschuhi.github.io/yt-transcript-summarizer/).
+
+## Contributing
+
+This is a personal learning project, but suggestions and feedback are welcome. Feel free to open an issue or submit a pull request.
 
 ## License
+
 MIT
