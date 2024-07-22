@@ -7,30 +7,22 @@ from openai import OpenAI
 # Load environment variables
 load_dotenv()
 
-# Initialize the OpenAI client
-def get_openai_client():
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY environment variable is not set")
-    return OpenAI(api_key=api_key)
+_client = None
 
-# Initialize the OpenAI client
-client = get_openai_client()
+def get_openai_client():
+    global _client
+    if _client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+        _client = OpenAI(api_key=api_key)
+    return _client
 
 def word_count(s):
     return len(re.findall(r'\w+', s))
 
-
 def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = "gpt-3.5-turbo") -> str:
-    """
-    Summarize the given text using OpenAI's API, incorporating metadata.
-
-    :param text: The text to summarize
-    :param metadata: A dictionary containing video metadata
-    :param max_words: The approximate maximum number of words for the summary
-    :param used_model: The name of the model to use, default: "gpt-3.5-turbo"
-    :return: The summarized text
-    """
+    client = get_openai_client()
     try:
         # Prepare the metadata string
         metadata_str = f"""
@@ -59,7 +51,6 @@ def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = 
             stop=None,
             temperature=0.7,
         )
-        # print(response)
         summary = response.choices[0].message.content.strip()
 
         return summary

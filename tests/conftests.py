@@ -64,7 +64,7 @@ def mock_dependencies(monkeypatch):
 
     monkeypatch.setattr('os.getenv', mock_getenv)
 
-    # Mock OpenAI client initialization
+    # Mock OpenAI client
     mock_openai_client = MagicMock()
     mock_openai_client.chat.completions.create.return_value = MockOpenAI.ChatCompletion.create()
     monkeypatch.setattr('openai_utils.get_openai_client', lambda: mock_openai_client)
