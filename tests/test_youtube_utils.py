@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from youtube_utils import get_youtube_data
-
+from ..youtube_utils import get_youtube_data
 
 def mock_get_transcript(video_id):
     return [
