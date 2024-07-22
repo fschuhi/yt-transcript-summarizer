@@ -2,18 +2,15 @@ name: Run Tests
 
 on: [push, pull_request]
 
-env:
-  NODE_VERSION: 20
-
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
-    - name: Use Node.js ${{ env.NODE_VERSION }}
+    - uses: actions/checkout@v3
+    - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        node-version: '20'
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
