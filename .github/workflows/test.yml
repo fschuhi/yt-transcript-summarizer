@@ -20,11 +20,6 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: Create and activate virtual environment
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -36,11 +31,17 @@ jobs:
     - name: Show current directory structure
       run: ls -R
 
-    - name: Run tests
+    - name: Show content of test file
+      run: cat tests/test_youtube_utils.py
+
+    - name: Show content of main file
+      run: cat youtube_utils.py
+
+    - name: Run tests with maximum verbosity
       env:
         YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       run: |
         echo "Current working directory: $(pwd)"
         echo "PYTHONPATH: $PYTHONPATH"
         export PYTHONPATH=$PYTHONPATH:$(pwd)
-        pytest tests/ -v
+        pytest tests/ -vv --capture=no --tb=long
