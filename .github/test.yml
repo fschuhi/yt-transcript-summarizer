@@ -11,20 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.9'
 
+    - name: Display Python version
+      run: python --version
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: List installed packages
+      run: pip list
+
+    - name: Display current directory structure
+      run: ls -R
+
     - name: Run tests
       run: |
-        pytest tests/
+        pytest tests/ -v
       env:
         API_KEY: ${{ secrets.API_KEY }}
