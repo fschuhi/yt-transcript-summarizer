@@ -97,8 +97,7 @@ async def read_root(request: Request):
     """
     logger.info("Received request for root endpoint")
     timestamp = datetime.now().timestamp()
-    return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
-
+    return templates.TemplateResponse(request=request, name="summarizer-form.html", context={"timestamp": timestamp})
 
 @app.get("/health")
 async def health_check():
