@@ -12,6 +12,7 @@ from typing import Optional
 import os
 from dotenv import load_dotenv
 import logging
+from functools import lru_cache
 
 import colorama
 
@@ -39,7 +40,6 @@ logger = logging.getLogger(__name__)
 # Setup Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
-API_KEY = os.getenv("API_KEY")  # Load from .env file
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
@@ -47,6 +47,11 @@ class SummarizeRequest(BaseModel):
     video_url: str
     summary_length: int
     used_model: str
+
+
+@lru_cache()
+def get_api_key_value():
+    return os.getenv("API_KEY")
 
 
 def get_api_key(api_key: str = Depends(api_key_header)):
@@ -57,7 +62,7 @@ def get_api_key(api_key: str = Depends(api_key_header)):
     :return: The API key if valid
     :raises HTTPException: 403 Forbidden if the API key is invalid
     """
-    if api_key == API_KEY:
+    if api_key == get_api_key_value():
         return api_key
     raise HTTPException(
         status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"
@@ -145,8 +150,6 @@ async def summarize(summarize_request: SummarizeRequest, _api_key: str = Depends
     summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length,
                                           summarize_request.used_model)
     word_count = len(summary.split())
-    # print(word_count)
-    # print(summary)
 
     return {
         'summary': summary,

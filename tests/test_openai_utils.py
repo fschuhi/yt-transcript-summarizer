@@ -1,8 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
-import os
 from openai_utils import summarize_text
-from .test_helpers import get_mock_youtube_data, mock_env_api_keys
+from .test_helpers import get_mock_youtube_data,mock_openai_summary,  mock_env_api_keys
 
 
 @pytest.fixture
@@ -16,21 +15,6 @@ def mock_youtube_data():
     :return: A dictionary containing mock transcript and metadata for testing.
     """
     return get_mock_youtube_data()
-
-
-@pytest.fixture
-def mock_openai_summary():
-    """
-    Fixture to load mock OpenAI summary from a file.
-
-    This fixture reads a text file containing a mock OpenAI-generated summary.
-
-    :return: A string containing the mock summary
-    """
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_dir, 'data', 'openai_summary_cnn_explanation_py5byOOHZM8.txt')
-    with open(file_path, 'r') as f:
-        return f.read().strip()
 
 
 @patch('openai_utils.OpenAI')
