@@ -10,6 +10,11 @@ from googleapiclient.errors import HttpError
 import os
 from dotenv import load_dotenv
 
+# see ((NGZFOQF)) below
+import logging
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+
+
 # Load environment variables
 load_dotenv()
 
@@ -55,6 +60,9 @@ def get_video_metadata(video_id: str) -> Dict[str, Union[str, int]]:
         return {}
 
     try:
+        # ((NGZFOQF))
+        # generates an info from the api: "file_cache is only supported with oauth2client<4.0.0" (?)
+        # we suppress it w/ setting the loglevel above
         youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
         # Call the videos().list method to retrieve video details
