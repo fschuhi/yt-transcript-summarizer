@@ -9,6 +9,7 @@ from .test_helpers import get_mock_youtube_data, mock_env_api_keys
 # the test environment with mock API keys. Removing these imports will
 # cause test failures due to missing fixtures.
 # see also ((UHAEBLK))
+# noinspection PyUnresolvedReferences
 from .test_helpers import MockAPIKeyProvider, mock_api_key_provider
 
 
