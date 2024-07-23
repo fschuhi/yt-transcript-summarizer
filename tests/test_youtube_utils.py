@@ -3,6 +3,14 @@ from unittest.mock import patch
 from youtube_utils import get_youtube_data
 from .test_helpers import get_mock_youtube_data, mock_env_api_keys
 
+# The following imports are required even though they appear unused.
+# MockAPIKeyProvider and mock_api_key_provider are used indirectly
+# through the mock_env_api_keys fixture, which is essential for setting up
+# the test environment with mock API keys. Removing these imports will
+# cause test failures due to missing fixtures.
+# see also ((UHAEBLK))
+from .test_helpers import MockAPIKeyProvider, mock_api_key_provider
+
 
 @pytest.fixture
 def mock_youtube_data():
