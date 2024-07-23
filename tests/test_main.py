@@ -4,6 +4,7 @@ from unittest.mock import patch
 from main import app
 from .test_helpers import get_mock_youtube_data, mock_openai_summary, mock_env_api_keys
 from .test_helpers import mock_api_key_provider
+from .test_helpers import parametrized_api_keys
 
 
 @pytest.fixture
@@ -65,7 +66,7 @@ def test_root_endpoint(client):
 
 
 def test_invalid_api_key(client):
-    headers = {"X-API-Key": "invalid_key"}
+    headers = {"X-API-Key": "clearly_invalid_key"}
     response = client.post("/login", headers=headers)
     assert response.status_code == 403
 
@@ -112,6 +113,25 @@ def test_summarize_endpoint(mock_summarize_text, mock_get_youtube_data, client, 
         300,
         "gpt-4o-mini"
     )
+
+
+def test_with_different_api_keys(parametrized_api_keys):
+    """
+    Test the /login endpoint with different API key scenarios.
+    This test reflects the current behavior of the application.
+    """
+    with TestClient(app) as client:
+        headers = {"X-API-KEY": parametrized_api_keys["API_KEY"]}
+        response = client.post("/login", headers=headers)
+
+        print(f"API Key used: {parametrized_api_keys['API_KEY']}")
+        print(f"Response status code: {response.status_code}")
+        print(f"Response body: {response.json()}")
+
+        if parametrized_api_keys["API_KEY"] == "dummy_api_key":
+            assert response.status_code == 403, "Login with dummy_api_key currently returns Forbidden"
+        else:
+            assert response.status_code == 200, "Login with test_api_key currently returns OK"
 
 
 if __name__ == "__main__":
