@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
+ * @typedef {Object} LoginResponse
+ * @property {string} access_token
+ */
+/**
  * Prompts the user for an API key and attempts to log in.
  * @returns {Promise<boolean>} True if login was successful, false otherwise.
  */
@@ -59,10 +63,10 @@ async function handleSubmit(e) {
         if (!loggedIn) return;
     }
 
-    const videoUrl = /** @type {HTMLInputElement} */ (document.getElementById('video_url')).value;
-    const summaryLength = /** @type {HTMLInputElement} */ (document.getElementById('summary_length')).value;
-    const usedModel = /** @type {HTMLSelectElement} */ (document.getElementById('used_model')).value;
-    const resultDiv = document.getElementById('result');
+const videoUrl = (/** @type {HTMLInputElement} */ (document.getElementById('video_url'))).value;
+const summaryLength = (/** @type {HTMLInputElement} */ (document.getElementById('summary_length'))).value;
+const usedModel = (/** @type {HTMLSelectElement} */ (document.getElementById('used_model'))).value;
+const resultDiv = document.getElementById('result');
 
     // Clear previous content
     resultDiv.innerHTML = '<div id="loading">Summarizing...</div>';
@@ -106,6 +110,19 @@ async function submitSummarizeRequest(videoUrl, summaryLength, usedModel) {
     return response.json();
 }
 
+/**
+ * @typedef {Object} SummarizeResult
+ * @property {Object} metadata
+ * @property {string} metadata.title
+ * @property {string} metadata.channel_title
+ * @property {string} metadata.description
+ * @property {string} metadata.publish_date
+ * @property {number} metadata.view_count
+ * @property {number} metadata.like_count
+ * @property {number} metadata.comment_count
+ * @property {string} summary
+ * @property {number} word_count
+ */
 /**
  * Displays the summarization result in the DOM.
  * @param {Object} result - The summarization result.

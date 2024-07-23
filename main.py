@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, Depends, Form
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import APIKeyHeader
@@ -122,12 +122,12 @@ async def login(api_key: str = Depends(get_api_key)):
 
 
 @app.post("/summarize")
-async def summarize(summarize_request: SummarizeRequest, api_key: str = Depends(get_api_key)):
+async def summarize(summarize_request: SummarizeRequest, _api_key: str = Depends(get_api_key)):
     """
     Summarize YouTube video with ChatGPT.
 
     :param summarize_request: The request body containing video URL and summary parameters
-    :param api_key: The API key for authentication
+    :param _api_key: The API key for authentication, not used for the request, but necessary for dependency injection
     :return: A dictionary with the summary, word count, and YouTube metadata
     :raises HTTPException: 400 Bad Request if the YouTube URL is invalid or transcript retrieval fails
     """

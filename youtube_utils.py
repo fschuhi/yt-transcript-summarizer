@@ -20,6 +20,7 @@ if YOUTUBE_API_KEY:
 else:
     print("YouTube API Key not found in environment variables.")
 
+
 def get_youtube_transcript(video_id: str, include_timestamps: bool = True) -> Union[
     List[Dict[str, Union[str, float]]], List[str]]:
     """

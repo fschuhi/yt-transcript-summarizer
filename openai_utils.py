@@ -9,6 +9,7 @@ load_dotenv()
 
 _client = None
 
+
 def get_openai_client():
     global _client
     if _client is None:
@@ -18,8 +19,10 @@ def get_openai_client():
         _client = OpenAI(api_key=api_key)
     return _client
 
+
 def word_count(s):
     return len(re.findall(r'\w+', s))
+
 
 def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = "gpt-3.5-turbo") -> str:
     client = get_openai_client()
@@ -39,10 +42,11 @@ def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = 
             model=used_model,
             messages=[
                 {"role": "system",
-                 "content": f"You are a helpful assistant that summarizes YouTube videos. Please summarize the following video transcript "
-                            f"in approximately {max_words} words. Use the provided metadata to enhance your summary. "
-                            f"It's important that your summary has at least {max_words} words, but it also shouldn't have "
-                            f"a word count that is significantly higher than {max_words}."},
+                 "content": f"You are a helpful assistant that summarizes YouTube videos. Please summarize the "
+                            f"following video transcript in approximately {max_words} words. Use the provided metadata "
+                            f"to enhance your summary. It's important that your summary has at least {max_words} "
+                            f"words, but it also shouldn't have a word count that is significantly higher than "
+                            f"{max_words}."},
                 {"role": "user",
                  "content": f"Here's the video metadata:\n{metadata_str}\n\nNow, summarize this transcript: {text}"}
             ],
