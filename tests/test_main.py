@@ -1,21 +1,24 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
-from main import app, get_api_key_value
+from main import app
 from .test_helpers import get_mock_youtube_data, mock_openai_summary, mock_env_api_keys
+from .test_helpers import mock_api_key_provider
 
 
 @pytest.fixture
-def client(mock_env_api_keys):
+def client(mock_env_api_keys, mock_api_key_provider):
     """
     Fixture to create a test client for the FastAPI application with mocked API key validation.
 
     This fixture does the following:
     1. Uses the mock_env_api_keys fixture to set up mock environment variables.
-    2. Patches the get_api_key_value function to return a dummy API key.
-    3. Creates and yields a TestClient instance for the FastAPI app.
+    2. Uses the mock_api_key_provider to get a consistent dummy API key.
+    3. Patches the get_api_key_value function to return the dummy API key.
+    4. Creates and yields a TestClient instance for the FastAPI app.
 
     :param mock_env_api_keys: Fixture that sets up mock environment variables (including API keys).
+    :param mock_api_key_provider: Fixture that provides a MockAPIKeyProvider instance.
     :return: A TestClient instance for the FastAPI application.
     """
     # We patch main.get_api_key_value instead of main.get_api_key because:
@@ -23,7 +26,10 @@ def client(mock_env_api_keys):
     # 2. By patching get_api_key_value, we control the source of the API key without
     #    modifying the validation logic in get_api_key.
     # 3. This approach allows us to test the actual get_api_key function's logic.
-    with patch('main.get_api_key_value', return_value="dummy_api_key"):
+
+    # We use mock_api_key_provider.get_key("API_KEY") to ensure consistency
+    # between the mocked environment variables and the patched get_api_key_value.
+    with patch('main.get_api_key_value', return_value=mock_api_key_provider.get_key("API_KEY")):
         # The 'with' statement is used for context management in Python.
         # It ensures that resources are properly set up and cleaned up.
 
@@ -37,7 +43,7 @@ def client(mock_env_api_keys):
             # 3. After the test is complete, it resumes here to do any cleanup if necessary.
             # 4. In this case, it ensures that the TestClient is properly closed after the test.
             #
-            # or alternatively:
+            # Additionally:
             # 1. It allows the TestClient to be created with the patched get_api_key_value.
             # 2. It keeps the TestClient and the patch active for the duration of each test.
             # 3. It ensures proper cleanup after each test, preventing potential side effects between tests.

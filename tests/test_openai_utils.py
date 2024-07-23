@@ -1,7 +1,10 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from openai_utils import summarize_text
-from .test_helpers import get_mock_youtube_data,mock_openai_summary,  mock_env_api_keys
+from .test_helpers import get_mock_youtube_data, mock_openai_summary,  mock_env_api_keys
+
+# necessary, even if PyCharm says "unused", see also ((UHAEBLK))
+from .test_helpers import MockAPIKeyProvider, mock_api_key_provider
 
 
 @pytest.fixture
