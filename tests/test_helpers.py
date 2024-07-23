@@ -19,6 +19,21 @@ def get_mock_youtube_data():
     return ast.literal_eval(content)
 
 
+@pytest.fixture
+def mock_openai_summary():
+    """
+    Fixture to load mock OpenAI summary from a file.
+
+    This fixture reads a text file containing a mock OpenAI-generated summary.
+
+    :return: A string containing the mock summary
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, 'data', 'openai_summary_cnn_explanation_py5byOOHZM8.txt')
+    with open(file_path, 'r') as f:
+        return f.read().strip()
+
+
 @pytest.fixture(autouse=True)
 def mock_env_api_keys(monkeypatch):
     """
@@ -31,3 +46,4 @@ def mock_env_api_keys(monkeypatch):
     """
     monkeypatch.setenv("OPENAI_API_KEY", "dummy_openai_api_key")
     monkeypatch.setenv("YOUTUBE_API_KEY", "dummy_youtube_api_key")
+    monkeypatch.setenv("API_KEY", "dummy_api_key")
