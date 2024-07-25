@@ -1,10 +1,10 @@
 <template>
   <div id="app">
-    <header>
-      <img src="@/assets/logo.png" alt="Summara Logo" class="logo">
-      <h1>Summara – a minimal video transcript summarizer</h1>
-    </header>
-    <form @submit.prevent="summarize">
+      <header>
+        <img src="@/assets/logo.png" alt="Summara Logo" class="logo">
+        <h1><span class="summara-text">Summara</span> – a minimal video transcript summarizer</h1>
+      </header>
+      <form @submit.prevent="summarize">
       <div class="form-group">
         <label for="video-url">YouTube URL or Video ID:</label>
         <input id="video-url" v-model="videoUrl" type="text" placeholder="Enter YouTube URL or Video ID" required>
@@ -53,53 +53,90 @@
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script lang="ts">
+import { defineComponent } from 'vue';
 
-export default {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import axios, { AxiosResponse, AxiosError } from 'axios';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { SummarizeResult, VideoMetadata } from './types';
+import '@/assets/styles.css';  // Add this line to import the CSS
+
+// Define the structure of API errors
+interface ApiError {
+  response?: {
+    data?: {
+      detail?: string;
+    };
+  };
+}
+
+function isApiError(error: unknown): error is ApiError {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const errorObj = error as { response?: unknown };
+
+  if (!errorObj.response || typeof errorObj.response !== 'object') {
+    return false;
+  }
+
+  const responseObj = errorObj.response as { data?: unknown };
+
+  return typeof responseObj.data === 'object' && responseObj.data !== null;
+}
+
+export default defineComponent({
   name: 'App',
   data() {
     return {
       videoUrl: '',
       summaryLength: 300,
       usedModel: 'gpt-4o-mini',
-      result: null,
-      accessToken: null,
+      result: null as SummarizeResult | null,
+      accessToken: null as string | null,
       isLoading: false,
     };
   },
-  computed: {
-    firstLineDescription() {
+computed: {
+    firstLineDescription(): string {
       return this.result?.metadata.description.split('\n')[0] || '';
     },
-    formattedSummary() {
+    formattedSummary(): string {
       return this.result?.summary.split('\n\n').map(p => `<p>${p}</p>`).join('') || '';
     },
-    formattedDescription() {
+    formattedDescription(): string {
       return this.result?.metadata.description.replace(/\n/g, '<br>') || '';
-    },
+    }
   },
   methods: {
-    formatDate(dateString) {
+    formatDate(dateString: string): string {
       return new Date(dateString).toLocaleDateString();
     },
-    async login() {
+    async login(): Promise<boolean> {
       const apiKey = prompt("Enter your API key:");
       if (!apiKey) return false;
 
       try {
-        const response = await axios.post('http://localhost:8000/login', null, {
+        const response: AxiosResponse<{ access_token: string }> = await axios.post('http://localhost:8000/login', null, {
           headers: { 'X-API-Key': apiKey }
         });
         this.accessToken = response.data.access_token;
         return true;
       } catch (error) {
         console.error('Login error:', error);
-        alert("Invalid API key");
+        // Use the isApiError type guard for more specific error handling
+        if (isApiError(error)) {
+          alert(`Login failed: ${error.response?.data?.detail || 'Invalid API key'}`);
+        } else {
+          alert("Login failed: Unknown error");
+        }
         return false;
       }
     },
-    async summarize() {
+    async summarize(): Promise<void> {
+      // Check if user is logged in, if not, prompt for login
       if (!this.accessToken) {
         const loggedIn = await this.login();
         if (!loggedIn) return;
@@ -109,7 +146,8 @@ export default {
       this.result = null;
 
       try {
-        const response = await axios.post('http://localhost:8000/summarize', {
+        // Make API call to summarize the video
+        const response: AxiosResponse<SummarizeResult> = await axios.post('http://localhost:8000/summarize', {
           video_url: this.videoUrl,
           summary_length: this.summaryLength,
           used_model: this.usedModel
@@ -122,35 +160,16 @@ export default {
         this.result = response.data;
       } catch (error) {
         console.error('Summarize error:', error);
-        alert(`Summarization failed: ${error.response?.data?.detail || 'Unknown error'}`);
+        // Use the isApiError type guard for more specific error handling
+        if (isApiError(error)) {
+          alert(`Summarization failed: ${error.response?.data?.detail || 'Unknown error'}`);
+        } else {
+          alert("Summarization failed: Unknown error");
+        }
       } finally {
         this.isLoading = false;
       }
     }
   }
-};
+});
 </script>
-
-<style>
-/* You can keep your existing styles and add these new ones */
-.loading-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
