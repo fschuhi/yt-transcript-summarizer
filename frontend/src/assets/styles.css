@@ -1,0 +1,145 @@
+/* static/css/styles.css */
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.logo {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+/* Adjust your existing styles as needed */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #3498db;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.box {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.box h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.main-info-box {
+    padding: 10px 20px;
+}
+
+.main-info-box h2 {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+}
+
+.main-info-box p {
+    margin: 5px 0;
+}
+
+.info-label {
+    color: #666;
+    font-weight: bold;
+}
+
+.summary-box p {
+    margin-bottom: 10px;
+}
+
+#word-count {
+    margin-top: 20px;
+    font-style: italic;
+    font-size: 14px;
+    color: #666;
+}
+
+.date-counts-box p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.long-desc-box p {
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-line;
+}
+
+#summary-content {
+    white-space: pre-wrap;
+    line-height: 1.8;
+}
+
+#loading {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+}

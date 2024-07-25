@@ -47,7 +47,10 @@ form {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 15px;
 }
 
 label {
@@ -56,10 +59,12 @@ label {
     font-weight: bold;
 }
 
-input[type="text"], input[type="number"], select {
+input[type="text"],
+input[type="number"],
+select {
     width: 100%;
     padding: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     box-sizing: border-box;

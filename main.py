@@ -3,12 +3,14 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import APIKeyHeader
 from starlette.status import HTTP_403_FORBIDDEN
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from youtube_utils import get_youtube_data
 import openai_utils
 import re
 from datetime import datetime
 from typing import Optional
+from typing import cast
 import os
 from dotenv import load_dotenv
 import logging
@@ -21,6 +23,15 @@ colorama.init()
 load_dotenv()
 
 app = FastAPI()
+
+# noinspection PyTypeChecker
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -138,24 +149,36 @@ async def summarize(summarize_request: SummarizeRequest, _api_key: str = Depends
     """
     logger.info(f"Received summarize request: {summarize_request}")
 
-    video_id = extract_video_id(summarize_request.video_url)
-    if not video_id:
-        raise HTTPException(status_code=400, detail="Invalid YouTube URL")
+    try:
+        video_id = extract_video_id(summarize_request.video_url)
+        if not video_id:
+            logger.error(f"Invalid YouTube URL: {summarize_request.video_url}")
+            raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
-    youtube_data = get_youtube_data(video_id)
-    if not youtube_data['transcript']:
-        raise HTTPException(status_code=400, detail="Failed to retrieve transcript")
+        logger.info(f"Extracted video ID: {video_id}")
+        youtube_data = get_youtube_data(video_id)
 
-    full_text = ' '.join(youtube_data['transcript'])
-    summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length,
-                                          summarize_request.used_model)
-    word_count = len(summary.split())
+        if not youtube_data['transcript']:
+            logger.error(f"Failed to retrieve transcript for video ID: {video_id}")
+            raise HTTPException(status_code=400, detail="Failed to retrieve transcript")
 
-    return {
-        'summary': summary,
-        'word_count': word_count,
-        'metadata': youtube_data['metadata']
-    }
+        full_text = ' '.join(youtube_data['transcript'])
+        logger.info(f"Transcript retrieved. Length: {len(full_text)} characters")
+
+        summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length,
+                                              summarize_request.used_model)
+        logger.info(f"Summary generated. Length: {len(summary)} characters")
+
+        word_count = len(summary.split())
+
+        return {
+            'summary': summary,
+            'word_count': word_count,
+            'metadata': youtube_data['metadata']
+        }
+    except Exception as e:
+        logger.exception(f"Error in summarize endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
 if __name__ == "__main__":
