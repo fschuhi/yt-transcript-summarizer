@@ -1,10 +1,10 @@
 <template>
   <div id="app">
-      <header>
-        <img src="@/assets/logo.png" alt="Summara Logo" class="logo">
-        <h1><span class="summara-text">Summara</span> – a minimal video transcript summarizer</h1>
-      </header>
-      <form @submit.prevent="summarize">
+    <header>
+      <img src="@/assets/logo.png" alt="Summara Logo" class="logo">
+      <h1><span class="summara-text">Summara</span> – a minimal video transcript summarizer</h1>
+    </header>
+    <form @submit.prevent="summarize">
       <div class="form-group">
         <label for="video-url">YouTube URL or Video ID:</label>
         <input id="video-url" v-model="videoUrl" type="text" placeholder="Enter YouTube URL or Video ID" required>
@@ -55,14 +55,14 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import axios, { AxiosResponse } from 'axios';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import axios, { AxiosResponse, AxiosError } from 'axios';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { SummarizeResult, VideoMetadata } from './types';
-import '@/assets/styles.css';  // Add this line to import the CSS
 
-// Define the structure of API errors
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000';
+import '@/assets/styles.css';
+
 interface ApiError {
   response?: {
     data?: {
@@ -99,10 +99,13 @@ export default defineComponent({
       isLoading: false,
     };
   },
-computed: {
+  created() {
+    console.log('API_BASE_URL:', API_BASE_URL);
+  },
+  computed: {
     firstLineDescription(): string {
       return this.result?.metadata.description.split('\n')[0] || '';
-    },
+  },
     formattedSummary(): string {
       return this.result?.summary.split('\n\n').map(p => `<p>${p}</p>`).join('') || '';
     },
@@ -114,29 +117,33 @@ computed: {
     formatDate(dateString: string): string {
       return new Date(dateString).toLocaleDateString();
     },
+
     async login(): Promise<boolean> {
       const apiKey = prompt("Enter your API key:");
       if (!apiKey) return false;
 
       try {
-        const response: AxiosResponse<{ access_token: string }> = await axios.post('http://localhost:8000/login', null, {
+        console.log('Attempting to login with API key');
+        const response: AxiosResponse<{ access_token: string }> = await axios.post(`${API_BASE_URL}/login`, null, {
           headers: { 'X-API-Key': apiKey }
         });
+        console.log('Login response:', response);
         this.accessToken = response.data.access_token;
         return true;
       } catch (error) {
         console.error('Login error:', error);
-        // Use the isApiError type guard for more specific error handling
-        if (isApiError(error)) {
-          alert(`Login failed: ${error.response?.data?.detail || 'Invalid API key'}`);
+        if (axios.isAxiosError(error)) {
+          console.error('Axios error details:', error.response?.data, error.response?.status, error.response?.headers);
+          alert(`Login failed: ${error.response?.data?.detail || error.message || 'Unknown error'}`);
         } else {
+          console.error('Non-Axios error:', error);
           alert("Login failed: Unknown error");
         }
         return false;
       }
     },
+
     async summarize(): Promise<void> {
-      // Check if user is logged in, if not, prompt for login
       if (!this.accessToken) {
         const loggedIn = await this.login();
         if (!loggedIn) return;
@@ -146,8 +153,7 @@ computed: {
       this.result = null;
 
       try {
-        // Make API call to summarize the video
-        const response: AxiosResponse<SummarizeResult> = await axios.post('http://localhost:8000/summarize', {
+        const response: AxiosResponse<SummarizeResult> = await axios.post(`${API_BASE_URL}/summarize`, {
           video_url: this.videoUrl,
           summary_length: this.summaryLength,
           used_model: this.usedModel
@@ -160,7 +166,6 @@ computed: {
         this.result = response.data;
       } catch (error) {
         console.error('Summarize error:', error);
-        // Use the isApiError type guard for more specific error handling
         if (isApiError(error)) {
           alert(`Summarization failed: ${error.response?.data?.detail || 'Unknown error'}`);
         } else {
