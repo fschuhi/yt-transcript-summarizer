@@ -2,3 +2,13 @@
 tools/
 docs/
 tmp/
+frontend/
+node_modules/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
