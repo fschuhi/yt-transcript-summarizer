@@ -6,6 +6,7 @@ openai
 pydantic
 python-dotenv
 python-multipart
+sqlalchemy
 starlette
 uvicorn
 youtube_transcript_api

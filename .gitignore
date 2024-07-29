@@ -53,3 +53,7 @@ aws-secret-usage-snippet.py
 *.bak
 tools/
 tmp/
+postgres-data_test
+
+*.stat
+/postgres-data_test
