@@ -17,8 +17,4 @@ clean:
 
 .PHONY: run_tests
 run_tests:
-   ENV_FILE=.env.test docker-compose run --rm test
-
-.PHONY: launch_and_run_tests
-launch_and_run_tests:
-    ENV_FILE=.env.test docker-compose up
+	docker-compose run --rm test
