@@ -33,6 +33,7 @@ def db_session(db_engine):
 
 
 # test_db_connection.py
+@pytest.mark.db
 def test_database_connection(db_session):
     # Test the database connection by executing a simple SQL query
     result = db_session.execute(text('SELECT 1')).fetchone()
