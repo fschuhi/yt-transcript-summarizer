@@ -54,6 +54,5 @@ aws-secret-usage-snippet.py
 tools/
 tmp/
 postgres-data_test
-
 *.stat
-/postgres-data_test
+/postgres-data

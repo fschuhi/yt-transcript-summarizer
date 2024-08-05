@@ -21,14 +21,14 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - ${PWD}:${PWD}
-    working_dir: ${PWD}
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
     depends_on:
       postgres:
         condition: service_healthy
     env_file:
       - .env.test
-    command: bash -c "./wait-for-it.sh postgres:5432 -- pytest"
+    command: sh -c "./wait-for-it.sh postgres:5432 -- pytest"
 
   postgres:
     image: postgres:13
@@ -64,6 +64,8 @@ services:
 volumes:
   pgadmin-data:
   postgres-data:
+
+
     # Use a different directory for Windows and macOS
     # Windows
 #    driver_opts:
@@ -71,7 +73,8 @@ volumes:
 #      device: ${PWD}/postgres-data_test
 #      o: bind
      #macOS
-     driver_opts:
-       type: none
-       device: ${HOME}/dev/yt-transcript-summarizer/postgres-data_test
-       o: bind
+#     driver_opts:
+#       type: none
+#       #device: ${HOME}/dev/yt-transcript-summarizer/postgres-data
+#       device: ${POSTGRES_LOCAL_DB_DIR}
+#       o: bind
