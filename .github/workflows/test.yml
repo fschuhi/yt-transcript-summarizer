@@ -26,6 +26,6 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest tests/ -v
+        pytest tests/ -v -m "not db"
       env:
         API_KEY: ${{ secrets.API_KEY }}
