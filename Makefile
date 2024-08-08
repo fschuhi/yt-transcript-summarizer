@@ -12,9 +12,9 @@ stop_containers:
 	docker-compose down
 
 .PHONY: clean
-clean:
+clean_containers:
 	docker-compose down --rmi all --volumes --remove-orphans
 
 .PHONY: run_tests
 run_tests:
-	docker-compose run --rm test
+	docker-compose -f docker-compose-test.yml run --rm test

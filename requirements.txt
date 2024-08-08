@@ -1,3 +1,4 @@
+alembic
 colorama
 datetime
 fastapi
