@@ -15,10 +15,10 @@ from dotenv import load_dotenv
 import logging
 from functools import lru_cache
 import colorama
-from jose import JWTError, jwt
 from auth_utils import hash_password, verify_password, create_access_token
 from user_data import get_user, add_user
-
+# noinspection PyPackageRequirements
+from jose import JWTError, jwt
 
 colorama.init()
 
@@ -147,6 +147,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": user['username']})
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @app.post("/summarize")
 async def summarize(summarize_request: SummarizeRequest, current_user: dict = Depends(get_current_user)):
     logger.info(f"Received summarize request from user: {current_user['username']}")
@@ -181,6 +182,7 @@ async def summarize(summarize_request: SummarizeRequest, current_user: dict = De
     except Exception as e:
         logger.exception(f"Error in summarize endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
