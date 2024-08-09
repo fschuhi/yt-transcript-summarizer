@@ -115,6 +115,7 @@ async def read_root(request: Request):
     :param request: The incoming request
     :return: TemplateResponse with the summarizer form
     """
+    # 09.08.24 doesn't work anymore, because we've changed to JWT auth and using username/password instead of "API key"
     logger.info("Received request for root endpoint")
     timestamp = datetime.now().timestamp()
     return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
