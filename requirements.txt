@@ -15,3 +15,5 @@ youtube_transcript_api
 google-api-python-client
 pytest
 httpx
+bcrypt
+python-jose
