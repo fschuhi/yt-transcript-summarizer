@@ -14,6 +14,7 @@ RUN pip install psycopg2-binary
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
+EXPOSE 5432
 
 # 20.07.24 *DO NOT* Copy the .env file 
 # COPY .env .env

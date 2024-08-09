@@ -18,3 +18,7 @@ clean_containers:
 .PHONY: run_tests
 run_tests:
 	docker-compose -f docker-compose-test.yml run --rm test
+
+run_alembic_test_database:
+	docker-compose -f docker-compose-test.yml run alembic
+

@@ -5,7 +5,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: alembic revision --autogenerate -m "Migration"
+      #- alembic upgrade head
+    volumes:
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
+    depends_on:
+      - postgres
+
+  alembic_upgrade:
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: alembic upgrade head
+      #- alembic upgrade head
+    volumes:
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
     depends_on:
@@ -16,19 +34,15 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
     volumes:
       - ${PROJECT_DIR}:${PROJECT_DIR}
     working_dir: ${PROJECT_DIR}
     depends_on:
-      - alembic
+      - postgres
     env_file:
       - .env.test
-    command: sh -c "./wait-for-it.sh postgres:5432 -- pytest"
+    command: sh -c "./wait-for-it.sh postgres:5432 -- python tests/bootstrap_test_db.py && pytest"
 
   postgres:
     image: postgres:13
@@ -51,3 +65,4 @@ services:
 
 volumes:
   postgres-data:
+
