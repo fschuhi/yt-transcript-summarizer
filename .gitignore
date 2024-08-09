@@ -56,3 +56,5 @@ tmp/
 postgres-data_test
 *.stat
 /postgres-data
+dirlist.txt
+filelist.txt
