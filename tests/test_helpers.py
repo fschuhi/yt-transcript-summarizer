@@ -2,6 +2,8 @@ import pytest
 import os
 import ast
 from typing import Dict, Any
+from datetime import datetime, timedelta
+from jose import jwt
 
 
 class MockAPIKeyProvider:
@@ -92,18 +94,68 @@ def mock_openai_summary() -> str:
 
 
 # Example of how to use parametrization for different API key scenarios
-@pytest.fixture(params=[
-    {"OPENAI_API_KEY": "test_openai_key", "YOUTUBE_API_KEY": "test_youtube_key", "API_KEY": "test_api_key"},
-    {"OPENAI_API_KEY": "dummy_openai_api_key", "YOUTUBE_API_KEY": "dummy_youtube_api_key", "API_KEY": "dummy_api_key"}
-])
-def parametrized_api_keys(request, monkeypatch):
+class MockTokenProvider:
     """
-    Parametrized fixture for testing different API key scenarios.
+    Centralized provider for mock JWT tokens used in testing.
+    """
 
-    :param request: pytest request object containing the parameter
-    :param monkeypatch: pytest's monkeypatch fixture
-    :return: A dictionary of API keys for the current test scenario
+    def __init__(self):
+        self.secret_key = "test_secret_key"
+        self.algorithm = "HS256"
+        self.expire_minutes = 30
+
+    def create_access_token(self, data: dict):
+        """
+        Create a mock JWT access token.
+
+        :param data: The data to encode in the token.
+        :return: A mock JWT token.
+        """
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(minutes=self.expire_minutes)
+        to_encode.update({"exp": expire})
+        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+
+    def get_token(self, username: str) -> str:
+        """
+        Get a mock JWT token for a given username.
+
+        :param username: The username to create a token for.
+        :return: A mock JWT token.
+        """
+        return self.create_access_token({"sub": username})
+
+
+@pytest.fixture
+def mock_token_provider() -> MockTokenProvider:
     """
-    for key, value in request.param.items():
+    Fixture to provide a MockTokenProvider instance.
+
+    :return: An instance of MockTokenProvider.
+    """
+    return MockTokenProvider()
+
+
+@pytest.fixture(autouse=True)
+def mock_env_variables(monkeypatch, mock_api_key_provider: MockAPIKeyProvider, mock_token_provider: MockTokenProvider):
+    """
+    Fixture to set dummy environment variables for testing.
+
+    This fixture uses monkeypatch to set dummy API keys and JWT-related variables for all tests,
+    ensuring that no real credentials are used during testing.
+
+    :param monkeypatch: pytest's monkeypatch fixture for modifying the test environment
+    :param mock_api_key_provider: The MockAPIKeyProvider instance
+    :param mock_token_provider: The MockTokenProvider instance
+    """
+    # Set API keys
+    for key, value in mock_api_key_provider.get_all_keys().items():
         monkeypatch.setenv(key, value)
-    return request.param
+
+    # Set JWT-related variables
+    monkeypatch.setenv("SECRET_KEY", mock_token_provider.secret_key)
+    monkeypatch.setenv("ALGORITHM", mock_token_provider.algorithm)
+    monkeypatch.setenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(mock_token_provider.expire_minutes))
+
+    return mock_api_key_provider, mock_token_provider  # Return both providers for direct access if needed
+

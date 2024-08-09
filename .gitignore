@@ -56,5 +56,7 @@ tmp/
 postgres-data_test
 *.stat
 /postgres-data
+user_data.py
 dirlist.txt
 filelist.txt
+errors.txt
