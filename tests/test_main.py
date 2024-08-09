@@ -2,11 +2,12 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 from main import app
-from jose import jwt
 from .test_helpers import get_mock_youtube_data, mock_openai_summary, mock_env_variables
 from .test_helpers import mock_token_provider
 # noinspection PyUnresolvedReferences
 from .test_helpers import mock_api_key_provider
+# noinspection PyPackageRequirements
+from jose import jwt
 
 
 @pytest.fixture

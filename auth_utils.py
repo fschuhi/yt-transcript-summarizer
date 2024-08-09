@@ -1,16 +1,16 @@
 import bcrypt
 from typing import Optional
-from jose import jwt
 from datetime import datetime, timedelta
-
 import os
 from dotenv import load_dotenv
+# noinspection PyPackageRequirements
+from jose import jwt
 
 load_dotenv()  # Load environment variables from .env file
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # You can adjust this as needed
+ACCESS_TOKEN_EXPIRE_MINUTES = 12 * 60  # 12 hours
 
 
 def hash_password(password: str) -> str:
