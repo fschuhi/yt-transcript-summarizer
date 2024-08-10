@@ -19,6 +19,11 @@ clean_containers:
 run_tests:
 	docker-compose -f docker-compose-test.yml run --rm test
 
-run_alembic_test_database:
-	docker-compose -f docker-compose-test.yml run alembic
+boostrap_dev_db:
+	docker-compose -f docker-compose-dev.yml run bootstrap_db
 
+create_new_dev_migration:
+	docker-compose -f docker-compose-dev.yml run alembic_migrate
+
+run_dev_migrations:
+	docker-compose -f docker-compose-dev.yml run alembic_upgrade

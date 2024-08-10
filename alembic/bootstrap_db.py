@@ -10,10 +10,10 @@ from sqlalchemy import text
 def bootstrap_database(db_url: str, script_location: str = ''):
     """
     Sets up a test database, including:
-    1. Checking if the test database exists
-    2. Dropping the test database if it exists
-    3. Creating an empty test database
-    4. Running all Alembic migrations on the test database
+    1. Checking if the database exists
+    2. Dropping the database if it exists
+    3. Creating an empty database
+    4. Running all Alembic migrations on the database
     """
     # 1. Check if the test database exists
     alembic_cfg = Config("alembic.ini")
@@ -21,7 +21,7 @@ def bootstrap_database(db_url: str, script_location: str = ''):
     logger = logging.getLogger('alembic')
 
     db_name = db_url.rsplit('/', 1)[-1]
-    db_server_url = db_url.replace(db_name, 'postgres')
+    db_server_url = db_url.replace('/'+db_name, '/postgres')
     logger.info(f'bootstrapping database {db_name} on {db_server_url}')
 
     engine = create_engine(db_server_url, isolation_level='AUTOCOMMIT')
@@ -44,5 +44,5 @@ def bootstrap_database(db_url: str, script_location: str = ''):
 
 if __name__ == "__main__":
     # Example usage
-    test_db_url = os.getenv("DATABASE_URL")
-    bootstrap_database(test_db_url)
+    db_url = os.getenv("DATABASE_URL")
+    bootstrap_database(db_url)
