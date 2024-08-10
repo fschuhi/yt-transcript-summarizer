@@ -19,23 +19,20 @@ clean_containers:
 run_tests:
 	docker-compose -f docker-compose-test.yml run --rm test
 
-.PHONY: run_tests_local
-run_tests_local:
-    export DATABASE_URL=postgresql://postgres:summaria_test@postgres/summaria_test
-
-
-.PHONY: create_dev_db
 dev_create_db:
 	docker-compose -f docker-compose-dev.yml run create_dev_db
 
-.PHONY: boostrap_dev_db
 dev_bootstrap_db:
 	docker-compose -f docker-compose-dev.yml run bootstrap_db
 
-.PHONY: create_new_dev_migration
 dev_new_migration:
 	docker-compose -f docker-compose-dev.yml run alembic_migrate
 
-.PHONY: run_dev_migrations
 dev_run_migrations:
 	docker-compose -f docker-compose-dev.yml run alembic_upgrade
+
+dev_local_new_migration:
+	alembic revision --autogenerate -m "Migration"
+
+dev_local_run_migrations:
+	alembic upgrade head

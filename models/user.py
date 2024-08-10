@@ -25,6 +25,12 @@ class User(Base):
     def check_password(self, password: str) -> bool:
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
+    def set_token(self, token: str):
+       self.token = bcrypt.hashpw(token.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_token(self, token: str) -> bool:
+        return bcrypt.checkpw(token.encode('utf-8'), self.token.encode('utf-8'))
+
 
 class UserRepository:
     def __init__(self, session: Session):

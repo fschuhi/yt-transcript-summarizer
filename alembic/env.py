@@ -2,6 +2,7 @@ import os
 import logging
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -73,6 +74,11 @@ def run_migrations_online() -> None:
     logger = logging.getLogger('alembic')
 
     database_url = os.getenv("DATABASE_URL")
+    if database_url is None:
+        project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        load_dotenv(dotenv_path=os.path.join(project_dir, '.env'))
+        database_url = os.getenv('DATABASE_URL')
+
     logger.info(f"Running migrations against database URL: {database_url}")
 
     # connectable = engine_from_config(
