@@ -19,11 +19,18 @@ clean_containers:
 run_tests:
 	docker-compose -f docker-compose-test.yml run --rm test
 
+.PHONY: create_dev_db
+create_dev_db:
+	docker-compose -f docker-compose-dev.yml run create_dev_db
+
+.PHONY: boostrap_dev_db
 boostrap_dev_db:
 	docker-compose -f docker-compose-dev.yml run bootstrap_db
 
+.PHONY: create_new_dev_migration
 create_new_dev_migration:
 	docker-compose -f docker-compose-dev.yml run alembic_migrate
 
+.PHONY: run_dev_migrations
 run_dev_migrations:
 	docker-compose -f docker-compose-dev.yml run alembic_upgrade
