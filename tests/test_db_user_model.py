@@ -44,7 +44,7 @@ def create_default_user(password: str) -> User:
 
 
 @pytest.mark.db
-def test_user_model():
+def test_user_model(setup_database):
     db_session = db_utils.create_db_session()
     password = 'hashed_password'
     user = create_default_user(password)
@@ -70,7 +70,7 @@ def test_user_model():
 
 
 @pytest.mark.db
-def test_user_repository_get_by_user_name():
+def test_user_repository_get_by_user_name(setup_database):
     db_session = db_utils.create_db_session()
     password = 'hashed_password'
     user = create_default_user(password)

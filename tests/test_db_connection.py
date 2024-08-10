@@ -7,7 +7,7 @@ import tests.db_utils as db_utils
 
 # test_db_connection.py
 @pytest.mark.db
-def test_database_connection():
+def test_database_connection(setup_database):
     # Test the database connection by executing a simple SQL query
     session = None
     try:
