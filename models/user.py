@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 import bcrypt
+from typing import Optional, List, Type
+from sqlalchemy.orm import Session
 
 Base = declarative_base()
 
@@ -9,6 +11,8 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, primary_key=True)
+    # we don't define user_name as primary key since we want to be able to change it if necessary
+    user_name = Column(String(255), index=True, unique=True)
     last_login_date = Column(DateTime, nullable=True)
     token_issuance_date = Column(DateTime, nullable=True)
     token = Column(String(255), nullable=True)
@@ -20,3 +24,31 @@ class User(Base):
 
     def check_password(self, password: str) -> bool:
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
+
+class UserRepository:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_by_id(self, user_id: int) -> Optional[User]:
+        return self.session.query(User).filter_by(user_id=user_id).first()
+
+    def get_by_user_name(self, user_name: str) -> Optional[User]:
+        return self.session.query(User).filter_by(user_name=user_name).first()
+
+    def get_all(self) -> list[Type[User]]:
+        return self.session.query(User).all()
+
+    def create(self, user: User) -> User:
+        self.session.add(user)
+        self.session.commit()
+        return user
+
+    def update(self, user: User) -> User:
+        self.session.merge(user)
+        self.session.commit()
+        return user
+
+    def delete(self, user: User) -> None:
+        self.session.delete(user)
+        self.session.commit()
