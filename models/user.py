@@ -20,13 +20,13 @@ class User(Base):
     identity_provider = Column(String(30), nullable=True, default='local')
 
     def set_password(self, password: str):
-       self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def check_password(self, password: str) -> bool:
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
     def set_token(self, token: str):
-       self.token = bcrypt.hashpw(token.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.token = bcrypt.hashpw(token.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def check_token(self, token: str) -> bool:
         return bcrypt.checkpw(token.encode('utf-8'), self.token.encode('utf-8'))
