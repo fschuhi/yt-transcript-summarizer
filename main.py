@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends, status
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import APIKeyHeader
-from starlette.status import HTTP_403_FORBIDDEN
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from starlette.status import HTTP_401_UNAUTHORIZED
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from youtube_utils import get_youtube_data
@@ -10,13 +10,15 @@ import openai_utils
 import re
 from datetime import datetime
 from typing import Optional
-from typing import cast
 import os
 from dotenv import load_dotenv
 import logging
 from functools import lru_cache
-
 import colorama
+from auth_utils import hash_password, verify_password, create_access_token
+from user_data import get_user, add_user
+# noinspection PyPackageRequirements
+from jose import JWTError, jwt
 
 colorama.init()
 
@@ -24,7 +26,7 @@ load_dotenv()
 
 app = FastAPI()
 
-# noinspection PyTypeChecker
+# CORS middleware setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8080", "https://vue.fschuhi.de"],
@@ -33,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
+# Static files and logging setup (unchanged)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configure logging
@@ -45,13 +47,11 @@ logging.basicConfig(
     ]
 )
 
-# Access the logger
 logger = logging.getLogger(__name__)
 
-# Setup Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 class SummarizeRequest(BaseModel):
@@ -60,33 +60,37 @@ class SummarizeRequest(BaseModel):
     used_model: str
 
 
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
 @lru_cache()
-def get_api_key_value():
-    return os.getenv("API_KEY")
+def get_secret_key():
+    return os.getenv("SECRET_KEY")
 
 
-def get_api_key(api_key: str = Depends(api_key_header)):
-    """
-    Dependency function to validate the API key, using FastAPI's Depends.
-
-    :param api_key: The API key to validate
-    :return: The API key if valid
-    :raises HTTPException: 403 Forbidden if the API key is invalid
-    """
-    if api_key == get_api_key_value():
-        return api_key
-    raise HTTPException(
-        status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
     )
+    try:
+        payload = jwt.decode(token, get_secret_key(), algorithms=["HS256"])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = get_user(username)
+    if user is None:
+        raise credentials_exception
+    return user
 
 
 def extract_video_id(input_string: str) -> Optional[str]:
-    """
-    Extract YouTube video ID from URL or video ID string.
-
-    :param input_string: The input URL or video ID string
-    :return: The extracted video ID, or None if invalid
-    """
     patterns = [
         r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)",
         r"(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)",
@@ -111,6 +115,7 @@ async def read_root(request: Request):
     :param request: The incoming request
     :return: TemplateResponse with the summarizer form
     """
+    # 09.08.24 doesn't work anymore, because we've changed to JWT auth and using username/password instead of "API key"
     logger.info("Received request for root endpoint")
     timestamp = datetime.now().timestamp()
     return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
@@ -118,36 +123,34 @@ async def read_root(request: Request):
 
 @app.get("/health")
 async def health_check():
-    """
-    Return the health status of the application, called by AWS.
-
-    :return: A dictionary with the status
-    """
     return {"status": "healthy"}
 
 
-@app.post("/login")
-async def login(api_key: str = Depends(get_api_key)):
-    """
-    Validate API key using the get_api_key dependency and return access token if valid.
+@app.post("/register")
+async def register(user: UserCreate):
+    if get_user(user.username):
+        raise HTTPException(status_code=400, detail="Username already registered")
+    hashed_password = hash_password(user.password)
+    add_user(user.username, user.email, hashed_password)
+    return {"message": "User registered successfully"}
 
-    :param api_key: The API key to validate
-    :return: A dictionary with the access token and token type
-    """
-    return {"access_token": api_key, "token_type": "bearer"}
+
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = get_user(form_data.username)
+    if not user or not verify_password(form_data.password, user['password']):
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user['username']})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.post("/summarize")
-async def summarize(summarize_request: SummarizeRequest, _api_key: str = Depends(get_api_key)):
-    """
-    Summarize YouTube video with ChatGPT.
-
-    :param summarize_request: The request body containing video URL and summary parameters
-    :param _api_key: The API key for authentication, not used for the request, but necessary for dependency injection
-    :return: A dictionary with the summary, word count, and YouTube metadata
-    :raises HTTPException: 400 Bad Request if the YouTube URL is invalid or transcript retrieval fails
-    """
-    logger.info(f"Received summarize request: {summarize_request}")
+async def summarize(summarize_request: SummarizeRequest, current_user: dict = Depends(get_current_user)):
+    logger.info(f"Received summarize request from user: {current_user['username']}")
 
     try:
         video_id = extract_video_id(summarize_request.video_url)
@@ -183,5 +186,4 @@ async def summarize(summarize_request: SummarizeRequest, _api_key: str = Depends
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

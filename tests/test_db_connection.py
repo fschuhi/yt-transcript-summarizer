@@ -16,4 +16,3 @@ def test_database_connection(setup_database):
         assert result[0] == 1
     finally:
         session.close()
-
