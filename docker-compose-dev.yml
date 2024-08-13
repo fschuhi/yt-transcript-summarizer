@@ -1,0 +1,79 @@
+version: '3'
+
+services:
+  create_dev_db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
+    volumes:
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    command: sh -c "./wait-for-it.sh postgres:5432 -- python utils/bootstrap_db.py --run-migrations False"
+
+  bootstrap_db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
+    volumes:
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    command: sh -c "./wait-for-it.sh postgres:5432 -- python utils/bootstrap_db.py"
+
+  alembic_migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: alembic revision --autogenerate -m "Migration"
+      #- alembic upgrade head
+    volumes:
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
+    depends_on:
+      - postgres
+
+  alembic_upgrade:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: alembic upgrade head
+      #- alembic upgrade head
+    volumes:
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    env_file:
+      - .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./wait-for-it.sh:/wait-for-it.sh
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+

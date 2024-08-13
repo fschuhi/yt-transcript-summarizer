@@ -1,21 +1,28 @@
 version: '3'
+
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "8080:8080"
-  
-  fastapi:
-    build: .
-    ports:
-      - "8000:8000"
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}
+    volumes:
+      - ${PROJECT_DIR}:${PROJECT_DIR}
+    working_dir: ${PROJECT_DIR}
+    depends_on:
+      - postgres
+    env_file:
+      - .env.test
+    #command: sh -c "./wait-for-it.sh postgres:5432 -- python utils/bootstrap_db.py && pytest"
+    command: sh -c "./wait-for-it.sh postgres:5432 -- pytest"
 
   postgres:
     image: postgres:13
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_DB='postgres'
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
@@ -29,18 +36,6 @@ services:
       timeout: 5s
       retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: your-email@example.com
-      PGADMIN_DEFAULT_PASSWORD: your-password
-    ports:
-      - 8081:80
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-    depends_on:
-      - postgres
-
 volumes:
-  pgadmin-data:
   postgres-data:
+
