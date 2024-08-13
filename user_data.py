@@ -1,8 +1,8 @@
 import json
 from typing import Dict, Optional
-from bcrypt import hashpw, gensalt, checkpw
 
 USER_DATA_FILE = 'users.json'
+
 
 def load_users() -> Dict[str, Dict]:
     try:
@@ -12,13 +12,16 @@ def load_users() -> Dict[str, Dict]:
         users = {}
     return users
 
+
 def save_users(users: Dict[str, Dict]):
     with open(USER_DATA_FILE, 'w') as file:
         json.dump(users, file, indent=4)
 
+
 def get_user(username: str) -> Optional[Dict]:
     users = load_users()
     return users.get(username)
+
 
 def add_user(username: str, email: str, hashed_password: str):
     users = load_users()
