@@ -20,6 +20,7 @@ from user_data import get_user, add_user
 # noinspection PyPackageRequirements
 from jose import JWTError, jwt
 
+
 colorama.init()
 
 load_dotenv()
@@ -87,7 +88,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     user = get_user(username)
     if user is None:
         raise credentials_exception
-    return user
+    return username  # Return just the username
 
 
 def extract_video_id(input_string: str) -> Optional[str]:
@@ -123,34 +124,52 @@ async def read_root(request: Request):
 
 @app.get("/health")
 async def health_check():
+    logger.info("Health check endpoint hit")
     return {"status": "healthy"}
 
 
 @app.post("/register")
 async def register(user: UserCreate):
+    logger.info(f"Received registration request: {user.username}, {user.email}")
     if get_user(user.username):
+        logger.warning(f"Username already registered: {user.username}")
         raise HTTPException(status_code=400, detail="Username already registered")
     hashed_password = hash_password(user.password)
     add_user(user.username, user.email, hashed_password)
+    logger.info(f"User registered successfully: {user.username}")
     return {"message": "User registered successfully"}
 
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = get_user(form_data.username)
-    if not user or not verify_password(form_data.password, user['password']):
-        raise HTTPException(
-            status_code=HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(data={"sub": user['username']})
-    return {"access_token": access_token, "token_type": "bearer"}
+    logger.info(f"Login attempt received for user: {form_data.username}")
+    try:
+        user = get_user(form_data.username)
+        if not user:
+            logger.warning(f"User not found: {form_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+            )
+        if not verify_password(form_data.password, user['password']):
+            logger.warning(f"Invalid password for user: {form_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+            )
+        logger.info(f"Login successful for user: {form_data.username}")
+        access_token = create_access_token(data={"sub": form_data.username})
+        return {"access_token": access_token, "token_type": "bearer"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Unexpected error during login: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
 
 @app.post("/summarize")
-async def summarize(summarize_request: SummarizeRequest, current_user: dict = Depends(get_current_user)):
-    logger.info(f"Received summarize request from user: {current_user['username']}")
+async def summarize(summarize_request: SummarizeRequest, current_user: str = Depends(get_current_user)):
+    logger.info(f"Received summarize request from user: {current_user}")
 
     try:
         video_id = extract_video_id(summarize_request.video_url)

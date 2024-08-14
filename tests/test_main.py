@@ -8,6 +8,9 @@ from .test_helpers import mock_token_provider
 from .test_helpers import mock_api_key_provider
 # noinspection PyPackageRequirements
 from jose import jwt
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -18,17 +21,18 @@ def client(mock_env_variables, mock_token_provider):
     This fixture does the following:
     1. Uses the mock_env_variables fixture to set up mock environment variables.
     2. Uses the mock_token_provider to get a consistent dummy JWT token.
-    3. Patches the get_current_user function to return a dummy user.
+    3. Patches the get_current_user function to return a dummy username.
     4. Creates and yields a TestClient instance for the FastAPI app.
 
     :param mock_env_variables: Fixture that sets up mock environment variables.
     :param mock_token_provider: Fixture that provides a MockTokenProvider instance.
     :return: A TestClient instance for the FastAPI application.
     """
-    dummy_user = {"username": "testuser", "email": "test@example.com"}
+    dummy_username = "testuser"
 
-    with patch('main.get_current_user', return_value=dummy_user):
+    with patch('main.get_current_user', return_value=dummy_username):
         with TestClient(app) as test_client:
+            logger.info("TestClient created with mocked current user")
             yield test_client
 
 
@@ -76,7 +80,7 @@ def test_login_failure(client):
         "username": "testuser",
         "password": "wrongpassword"
     }
-    with patch('main.get_user', return_value={"username": "testuser", "password": "hashed_password"}), \
+    with patch('main.get_user', return_value={"email": "test@example.com", "password": "hashed_password"}), \
             patch('main.verify_password', return_value=False):
         response = client.post("/token", data=login_data)
     assert response.status_code == 401
@@ -108,7 +112,8 @@ def test_summarize_endpoint(mock_summarize_text, mock_get_youtube_data, client, 
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with patch('main.get_secret_key', return_value=secret_key), \
-            patch('main.get_user', return_value={"username": "testuser", "email": "test@example.com"}):
+            patch('main.get_user', return_value={"username": "testuser", "email": "test@example.com"}), \
+            patch('main.get_current_user', return_value="testuser"):  # Changed this line
         response = client.post("/summarize", json=test_data, headers=headers)
 
         print(f"Response status code: {response.status_code}")
