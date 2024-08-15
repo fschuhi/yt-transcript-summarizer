@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch
-from youtube_utils import get_youtube_data
+
+from utils import youtube_utils
+from utils.youtube_utils import get_youtube_data
 from .test_helpers import get_mock_youtube_data, mock_env_api_keys
 
 # The following imports are required even though they appear unused.
@@ -26,8 +28,8 @@ def mock_youtube_data():
     return get_mock_youtube_data()
 
 
-@patch('youtube_utils.get_youtube_transcript')
-@patch('youtube_utils.get_video_metadata')
+@patch.object(youtube_utils, "get_youtube_transcript")
+@patch.object(youtube_utils, 'get_video_metadata')
 def test_get_youtube_data(mock_get_video_metadata, mock_get_youtube_transcript, mock_youtube_data, mock_env_api_keys):
     """
     Test the get_youtube_data function from youtube_utils.

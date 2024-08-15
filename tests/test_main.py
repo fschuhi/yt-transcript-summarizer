@@ -43,9 +43,12 @@ def test_health_check(client):
 
 
 def test_root_endpoint(client):
+    """
+    Test that the root endpoint returns a 403 Forbidden status.
+    """
     response = client.get("/")
-    assert response.status_code == 200
-    assert "text/html" in response.headers["content-type"]
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access to this endpoint is forbidden"}
 
 
 def test_register(client):

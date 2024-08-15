@@ -59,4 +59,5 @@ postgres-data_test
 user_data.py
 dirlist.txt
 filelist.txt
+filesdump.txt
 errors.txt

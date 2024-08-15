@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from openai_utils import summarize_text
+
+from utils import openai_utils
+from utils.openai_utils import summarize_text
 from .test_helpers import get_mock_youtube_data, mock_openai_summary,  mock_env_api_keys
 
 # necessary, even if PyCharm says "unused", see also ((UHAEBLK))
@@ -21,7 +23,7 @@ def mock_youtube_data():
     return get_mock_youtube_data()
 
 
-@patch('openai_utils.OpenAI')
+@patch.object(openai_utils, 'OpenAI')
 def test_summarize_text(mock_openai, mock_youtube_data, mock_openai_summary, mock_env_api_keys):
     """
     Test the summarize_text function from openai_utils.

@@ -2,11 +2,10 @@ from fastapi import FastAPI, Request, HTTPException, Depends, status
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from starlette.status import HTTP_401_UNAUTHORIZED
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from youtube_utils import get_youtube_data
-import openai_utils
+from utils.youtube_utils import get_youtube_data
+from utils import openai_utils
 import re
 from datetime import datetime
 from typing import Optional
@@ -15,7 +14,7 @@ from dotenv import load_dotenv
 import logging
 from functools import lru_cache
 import colorama
-from auth_utils import hash_password, verify_password, create_access_token
+from utils.auth_utils import hash_password, verify_password, create_access_token
 from user_data import get_user, add_user
 # noinspection PyPackageRequirements
 from jose import JWTError, jwt
@@ -37,7 +36,7 @@ app.add_middleware(
 )
 
 # Static files and logging setup (unchanged)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configure logging
 logging.basicConfig(
@@ -50,7 +49,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-templates = Jinja2Templates(directory="templates")
+# templates = Jinja2Templates(directory="templates")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -111,15 +110,16 @@ def extract_video_id(input_string: str) -> Optional[str]:
 @app.get("/")
 async def read_root(request: Request):
     """
-    Render the summarizer form template with current timestamp.
+    Forbid access to the root endpoint.
+
+    This endpoint is no longer accessible due to changes in authentication method
+    and overall API structure. It now returns a 403 Forbidden response.
 
     :param request: The incoming request
-    :return: TemplateResponse with the summarizer form
+    :raises HTTPException: Always raises a 403 Forbidden exception
     """
-    # 09.08.24 doesn't work anymore, because we've changed to JWT auth and using username/password instead of "API key"
-    logger.info("Received request for root endpoint")
-    timestamp = datetime.now().timestamp()
-    return templates.TemplateResponse("summarizer-form.html", {"request": request, "timestamp": timestamp})
+    logger.info("Received request for root endpoint (forbidden)")
+    raise HTTPException(status_code=403, detail="Access to this endpoint is forbidden")
 
 
 @app.get("/health")
