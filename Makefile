@@ -19,6 +19,10 @@ clean_containers:
 run_tests:
 	docker-compose -f docker-compose-test.yml run --rm test
 
+.PHONY: run_fastapi
+run_fastapi:
+	docker-compose up --build -d fastapi
+
 dev_create_db:
 	docker-compose -f docker-compose-dev.yml run create_dev_db
 
