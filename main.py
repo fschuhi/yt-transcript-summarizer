@@ -1,13 +1,10 @@
 from fastapi import FastAPI, Request, HTTPException, Depends, status
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from utils.youtube_utils import get_youtube_data
 from utils import openai_utils
 import re
-from datetime import datetime
 from typing import Optional
 import os
 from dotenv import load_dotenv
@@ -15,7 +12,7 @@ import logging
 from functools import lru_cache
 import colorama
 from utils.auth_utils import hash_password, verify_password, create_access_token
-from user_data import get_user, add_user
+from utils.user_data import get_user, add_user
 # noinspection PyPackageRequirements
 from jose import JWTError, jwt
 

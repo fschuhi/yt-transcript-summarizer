@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-USER_DATA_FILE = 'users.json'
+USER_DATA_FILE = '../users.json'
 
 
 def load_users() -> Dict[str, Dict]:
