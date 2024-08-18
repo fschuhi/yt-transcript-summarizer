@@ -1,4 +1,3 @@
-# conftest.py
 import os
 from datetime import datetime
 
@@ -20,10 +19,10 @@ def create_db_session():
 def test_user_set_password():
     password = 'hashed_password'
     user = User(
-        last_login_date=datetime(2023, 5, 1, 10, 30, 0),
-        token_issuance_date=datetime(2023, 5, 1, 10, 30, 0),
-        token='test_token',
-        identity_provider='local'
+        user_id=None,
+        user_name='testuser',
+        email='test@example.com',
+        password_hash=''
     )
     user.set_password(password)
     assert user.check_password(password)
@@ -31,15 +30,16 @@ def test_user_set_password():
 
 def create_default_user(password: str, token: str) -> User:
     user = User(
+        user_id=None,
         user_name='summaria@summaria.com',
-        last_login_date=datetime(2023, 5, 1, 10, 30, 0),
-        token_issuance_date=datetime(2023, 5, 1, 10, 30, 0),
-        #token='test_token',
-        # password_hash='hashed_password',
-        identity_provider='local'
+        email='summaria@summaria.com',
+        password_hash=''
     )
     user.set_password(password)
     user.set_token(token)
+    user.last_login_date = datetime(2023, 5, 1, 10, 30, 0)
+    user.token_issuance_date = datetime(2023, 5, 1, 10, 30, 0)
+    user.identity_provider = 'local'
     return user
 
 
@@ -60,6 +60,7 @@ def test_user_model(setup_database):
     # Check that the fields match
     assert isinstance(reloaded_user, User)
     assert reloaded_user.user_name == user.user_name
+    assert reloaded_user.email == user.email
     assert reloaded_user.last_login_date == user.last_login_date
     assert reloaded_user.token_issuance_date == user.token_issuance_date
     assert reloaded_user.check_token(token)
