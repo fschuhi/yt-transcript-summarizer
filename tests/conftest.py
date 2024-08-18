@@ -1,8 +1,16 @@
 import os
-
 import pytest
 from utils import bootstrap_db
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def log_repository_type():
+    repository_type = os.getenv("USER_REPOSITORY_TYPE", "json")
+    logger.info(f"\n*** Running tests with repository type: {repository_type} ***\n")
 
 
 @pytest.fixture(scope="session")

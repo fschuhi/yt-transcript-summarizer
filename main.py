@@ -13,6 +13,11 @@ from functools import lru_cache
 import colorama
 from services.user_auth_service import UserAuthService
 from repositories.user_json_repository import UserJsonRepository
+from repositories.user_db_repository import UserDBRepository
+from sqlalchemy.orm import Session
+from db import get_db
+from repositories.repository_provider import get_repository, get_repository_provider
+from services.service_interfaces import IUserRepository
 
 colorama.init()
 
@@ -48,13 +53,6 @@ logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-# Create UserRepository and UserAuthService instances
-@lru_cache()
-def get_user_auth_service():
-    user_repository = UserJsonRepository('users.json')  # Assuming 'users.json' is the correct path
-    return UserAuthService(user_repository)
-
-
 class SummarizeRequest(BaseModel):
     video_url: str
     summary_length: int
@@ -72,13 +70,16 @@ def get_secret_key():
     return os.getenv("SECRET_KEY")
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    repo: IUserRepository = Depends(get_repository)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    user_auth_service = get_user_auth_service()
+    user_auth_service = UserAuthService(repo)
     try:
         user = user_auth_service.authenticate_user_by_token(token)
         if user is None:
@@ -127,9 +128,9 @@ async def health_check():
 
 
 @app.post("/register")
-async def register(user: UserCreate):
+async def register(user: UserCreate, repo: IUserRepository = Depends(get_repository)):
     logger.info(f"Received registration request: {user.username}, {user.email}")
-    user_auth_service = get_user_auth_service()
+    user_auth_service = UserAuthService(repo)
     try:
         user_auth_service.register_user(user.username, user.email, user.password)
         logger.info(f"User registered successfully: {user.username}")
@@ -140,9 +141,9 @@ async def register(user: UserCreate):
 
 
 @app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), repo: IUserRepository = Depends(get_repository)):
     logger.info(f"Login attempt received for user: {form_data.username}")
-    user_auth_service = get_user_auth_service()
+    user_auth_service = UserAuthService(repo)
     try:
         user = user_auth_service.authenticate_user(form_data.username, form_data.password)
         if not user:
