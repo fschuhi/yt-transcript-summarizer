@@ -1,19 +1,9 @@
-import os
 from datetime import datetime
-
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from models.user import User
-from models.user import UserRepository
+from repositories.user_repository import UserRepository
 import tests.db_utils as db_utils
-
-
-def create_db_session():
-    db_url = os.getenv('DATABASE_URL')
-    engine = create_engine(db_url)
-    Session = sessionmaker(bind=engine)
-    return Session()
+from utils.auth_utils import AuthenticationUtils
 
 
 def test_user_set_password():
@@ -24,8 +14,8 @@ def test_user_set_password():
         email='test@example.com',
         password_hash=''
     )
-    user.set_password(password)
-    assert user.check_password(password)
+    user.password_hash = AuthenticationUtils.hash_password(password)
+    assert AuthenticationUtils.verify_password(password, user.password_hash)
 
 
 def create_default_user(password: str, token: str) -> User:
@@ -33,10 +23,9 @@ def create_default_user(password: str, token: str) -> User:
         user_id=None,
         user_name='summaria@summaria.com',
         email='summaria@summaria.com',
-        password_hash=''
+        password_hash=AuthenticationUtils.hash_password(password)
     )
-    user.set_password(password)
-    user.set_token(token)
+    user.token = AuthenticationUtils.hash_password(token)  # We're using hash_password for token too, as it's similar to how set_token worked
     user.last_login_date = datetime(2023, 5, 1, 10, 30, 0)
     user.token_issuance_date = datetime(2023, 5, 1, 10, 30, 0)
     user.identity_provider = 'local'
@@ -63,8 +52,8 @@ def test_user_model(setup_database):
     assert reloaded_user.email == user.email
     assert reloaded_user.last_login_date == user.last_login_date
     assert reloaded_user.token_issuance_date == user.token_issuance_date
-    assert reloaded_user.check_token(token)
-    assert reloaded_user.check_password(password)
+    assert AuthenticationUtils.verify_password(token, reloaded_user.token)
+    assert AuthenticationUtils.verify_password(password, reloaded_user.password_hash)
     assert reloaded_user.identity_provider == user.identity_provider
 
     # Delete the user

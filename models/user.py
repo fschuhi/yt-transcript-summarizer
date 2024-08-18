@@ -1,8 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-import bcrypt
-from typing import Optional, List, Type
-from sqlalchemy.orm import Session
+from typing import Optional
 
 Base = declarative_base()
 
@@ -26,42 +24,4 @@ class User(Base):
         self.email = email
         self.password_hash = password_hash
 
-    def set_password(self, password: str):
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    def check_password(self, password: str) -> bool:
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
-
-    def set_token(self, token: str):
-        self.token = bcrypt.hashpw(token.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    def check_token(self, token: str) -> bool:
-        return bcrypt.checkpw(token.encode('utf-8'), self.token.encode('utf-8'))
-
-
-class UserRepository:
-    def __init__(self, session: Session):
-        self.session = session
-
-    def get_by_id(self, user_id: int) -> Optional[User]:
-        return self.session.query(User).filter_by(user_id=user_id).first()
-
-    def get_by_user_name(self, user_name: str) -> Optional[User]:
-        return self.session.query(User).filter_by(user_name=user_name).first()
-
-    def get_all(self) -> list[Type[User]]:
-        return self.session.query(User).all()
-
-    def create(self, user: User) -> User:
-        self.session.add(user)
-        self.session.commit()
-        return user
-
-    def update(self, user: User) -> User:
-        self.session.merge(user)
-        self.session.commit()
-        return user
-
-    def delete(self, user: User) -> None:
-        self.session.delete(user)
-        self.session.commit()
+# Remove the UserRepository class if it's in this file, as it should be in a separate repository file
