@@ -1,24 +1,8 @@
 import pytest
-import os
 from models.user import User
-from repositories.user_json_repository import UserJsonRepository
-from services.user_auth_service import UserAuthService, UserAlreadyExistsError
+from services.user_auth_service import UserAlreadyExistsError
+from tests.conftest import user_repository, user_auth_service
 from utils.auth_utils import AuthenticationUtils
-
-
-@pytest.fixture
-def user_repository():
-    test_file = 'test_users.json'
-    repo = UserJsonRepository(test_file)
-    yield repo
-    # Clean up after test
-    if os.path.exists(test_file):
-        os.remove(test_file)
-
-
-@pytest.fixture
-def user_auth_service(user_repository):
-    return UserAuthService(user_repository)
 
 
 def test_create_user(user_repository):

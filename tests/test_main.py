@@ -1,12 +1,14 @@
 import os
-import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-from main import app
-from .test_helpers import get_mock_youtube_data, mock_openai_summary, mock_env_variables
-from .test_helpers import mock_token_provider
 # noinspection PyUnresolvedReferences
-from .test_helpers import mock_api_key_provider
+import pytest
+from unittest.mock import patch, MagicMock
+from .conftest import (
+    mock_env_variables,
+    mock_token_provider,
+    mock_api_key_provider,
+    mock_openai_summary,
+    client
+)
 # noinspection PyPackageRequirements
 from jose import jwt
 from repositories.user_json_repository import UserJsonRepository
@@ -14,29 +16,6 @@ from repositories.user_db_repository import UserDBRepository
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture
-def client(mock_env_variables, mock_token_provider):
-    """
-    Fixture to create a test client for the FastAPI application with mocked JWT token validation.
-
-    This fixture does the following:
-    1. Uses the mock_env_variables fixture to set up mock environment variables.
-    2. Uses the mock_token_provider to get a consistent dummy JWT token.
-    3. Patches the get_current_user function to return a dummy username.
-    4. Creates and yields a TestClient instance for the FastAPI app.
-
-    :param mock_env_variables: Fixture that sets up mock environment variables.
-    :param mock_token_provider: Fixture that provides a MockTokenProvider instance.
-    :return: A TestClient instance for the FastAPI application.
-    """
-    dummy_username = "testuser"
-
-    with patch('main.get_current_user', return_value=dummy_username):
-        with TestClient(app) as test_client:
-            logger.info("TestClient created with mocked current user")
-            yield test_client
 
 
 def test_repository_type(client):
@@ -158,9 +137,8 @@ def test_login_failure(client):
 
 @patch('main.get_youtube_data')
 @patch('main.openai_utils.summarize_text')
-def test_summarize_endpoint(mock_summarize_text, mock_get_youtube_data, client, mock_openai_summary):
+def test_summarize_endpoint(mock_summarize_text, mock_get_youtube_data, client, mock_openai_summary, mock_youtube_data):
     # Setup mock data
-    mock_youtube_data = get_mock_youtube_data()
     mock_get_youtube_data.return_value = mock_youtube_data
     mock_summarize_text.return_value = mock_openai_summary
 

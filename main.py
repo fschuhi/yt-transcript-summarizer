@@ -12,11 +12,7 @@ import logging
 from functools import lru_cache
 import colorama
 from services.user_auth_service import UserAuthService
-from repositories.user_json_repository import UserJsonRepository
-from repositories.user_db_repository import UserDBRepository
-from sqlalchemy.orm import Session
-from db import get_db
-from repositories.repository_provider import get_repository, get_repository_provider
+from repositories.repository_provider import get_repository
 from services.service_interfaces import IUserRepository
 
 colorama.init()
@@ -47,8 +43,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-# templates = Jinja2Templates(directory="templates")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
