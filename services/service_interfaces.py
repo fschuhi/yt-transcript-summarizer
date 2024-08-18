@@ -3,13 +3,13 @@ from typing import Optional, List, Type
 from models.user import User
 
 
-class IUserService(ABC):
+class IUserAuthService(ABC):
     @abstractmethod
     def register_user(self, username: str, email: str, password: str) -> User:
         pass
 
     @abstractmethod
-    def authenticate_user(self, username: str, password: str) -> Optional[User]:
+    def authenticate_user(self, identifier: str, password: str) -> Optional[User]:
         pass
 
     @abstractmethod
@@ -21,7 +21,15 @@ class IUserService(ABC):
         pass
 
     @abstractmethod
-    def get_user(self, username: str) -> Optional[User]:
+    def get_user(self, identifier: str) -> Optional[User]:
+        pass
+
+    @abstractmethod
+    def get_user_by_email(self, email: str) -> Optional[User]:
+        pass
+
+    @abstractmethod
+    def update_user_email(self, user: User, new_email: str) -> User:
         pass
 
 
@@ -31,7 +39,11 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
-    def get_by_user_name(self, user_name: str) -> Optional[User]:
+    def get_by_identifier(self, identifier: str) -> Optional[User]:
+        pass
+
+    @abstractmethod
+    def get_by_email(self, email: str) -> Optional[User]:
         pass
 
     @abstractmethod

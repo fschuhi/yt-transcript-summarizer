@@ -20,34 +20,49 @@ class UserRepository(IUserRepository):
             json.dump(users, file, indent=4)
 
     def get_by_id(self, user_id: int) -> Optional[User]:
-        users = self._load_users()
-        for username, user_data in users.items():
-            if user_data.get('id') == user_id:
-                return User(
-                    user_id=user_id,
-                    user_name=username,
-                    email=user_data['email'],
-                    password_hash=user_data['password']
-                )
+        # Currently, we don't store user IDs in the JSON file
+        # This method will always return None
         return None
 
-    def get_by_user_name(self, user_name: str) -> Optional[User]:
+    def get_by_identifier(self, identifier: str) -> Optional[User]:
         users = self._load_users()
-        user_data = users.get(user_name)
+        # First, try to find by username
+        user_data = users.get(identifier)
         if user_data:
             return User(
-                user_id=user_data.get('id'),
-                user_name=user_name,
+                user_id=None,
+                user_name=identifier,
                 email=user_data['email'],
                 password_hash=user_data['password']
             )
+        # If not found by username, try to find by email
+        for username, data in users.items():
+            if data['email'] == identifier:
+                return User(
+                    user_id=None,
+                    user_name=username,
+                    email=identifier,
+                    password_hash=data['password']
+                )
+        return None
+
+    def get_by_email(self, email: str) -> Optional[User]:
+        users = self._load_users()
+        for username, user_data in users.items():
+            if user_data['email'] == email:
+                return User(
+                    user_id=None,  # Note: There's no 'id' in the JSON, so we're using None
+                    user_name=username,
+                    email=email,
+                    password_hash=user_data['password']
+                )
         return None
 
     def get_all(self) -> List[User]:
         users = self._load_users()
         return [
             User(
-                user_id=user_data.get('id'),
+                user_id=None,
                 user_name=username,
                 email=user_data['email'],
                 password_hash=user_data['password']
