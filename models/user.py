@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from typing import Optional
+from typing import Optional, Dict
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -9,7 +10,6 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, primary_key=True)
-    # we don't define user_name as primary key since we want to be able to change it if necessary
     user_name = Column(String(255), index=True, unique=True)
     email = Column(String(255), unique=True, nullable=False)
     last_login_date = Column(DateTime, nullable=True)
@@ -24,4 +24,28 @@ class User(Base):
         self.email = email
         self.password_hash = password_hash
 
-# Remove the UserRepository class if it's in this file, as it should be in a separate repository file
+    def to_dict(self) -> Dict:
+        return {
+            'user_id': self.user_id,
+            'user_name': self.user_name,
+            'email': self.email,
+            'last_login_date': self.last_login_date.isoformat() if self.last_login_date else None,
+            'token_issuance_date': self.token_issuance_date.isoformat() if self.token_issuance_date else None,
+            'token': self.token,
+            'password_hash': self.password_hash,
+            'identity_provider': self.identity_provider
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'User':
+        user = cls(
+            user_id=data.get('user_id'),
+            user_name=data['user_name'],
+            email=data['email'],
+            password_hash=data['password_hash']
+        )
+        user.last_login_date = datetime.fromisoformat(data['last_login_date']) if data.get('last_login_date') else None
+        user.token_issuance_date = datetime.fromisoformat(data['token_issuance_date']) if data.get('token_issuance_date') else None
+        user.token = data.get('token')
+        user.identity_provider = data.get('identity_provider', 'local')
+        return user

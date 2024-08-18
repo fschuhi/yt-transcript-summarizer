@@ -57,11 +57,14 @@ def test_register(client):
         "email": "newuser@example.com",
         "password": "password123"
     }
-    with patch('main.add_user') as mock_add_user:
+    with patch('main.get_user_auth_service') as mock_get_service:
+        mock_service = mock_get_service.return_value
         response = client.post("/register", json=user_data)
     assert response.status_code == 200
     assert response.json() == {"message": "User registered successfully"}
-    mock_add_user.assert_called_once()
+    mock_service.register_user.assert_called_once_with(
+        user_data["username"], user_data["email"], user_data["password"]
+    )
 
 
 def test_login_success(client):
@@ -69,13 +72,17 @@ def test_login_success(client):
         "username": "testuser",
         "password": "password123"
     }
-    with patch('main.get_user', return_value={"username": "testuser", "password": "hashed_password"}), \
-            patch('main.verify_password', return_value=True), \
-            patch('main.create_access_token', return_value="dummy_token"):
+    with patch('main.get_user_auth_service') as mock_get_service:
+        mock_service = mock_get_service.return_value
+        mock_service.authenticate_user.return_value = True  # Simulate successful authentication
+        mock_service.generate_token.return_value = "dummy_token"
         response = client.post("/token", data=login_data)
+
     assert response.status_code == 200
     assert "access_token" in response.json()
     assert response.json()["token_type"] == "bearer"
+    mock_service.authenticate_user.assert_called_once_with(login_data["username"], login_data["password"])
+    mock_service.generate_token.assert_called_once()
 
 
 def test_login_failure(client):
@@ -83,11 +90,14 @@ def test_login_failure(client):
         "username": "testuser",
         "password": "wrongpassword"
     }
-    with patch('main.get_user', return_value={"email": "test@example.com", "password": "hashed_password"}), \
-            patch('main.verify_password', return_value=False):
+    with patch('main.get_user_auth_service') as mock_get_service:
+        mock_service = mock_get_service.return_value
+        mock_service.authenticate_user.return_value = None  # Simulate failed authentication
         response = client.post("/token", data=login_data)
+
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect username or password"
+    mock_service.authenticate_user.assert_called_once_with(login_data["username"], login_data["password"])
 
 
 @patch('main.get_youtube_data')
@@ -105,18 +115,17 @@ def test_summarize_endpoint(mock_summarize_text, mock_get_youtube_data, client, 
         "used_model": "gpt-4-mini"
     }
 
-    # Create a real JWT token
-    secret_key = "test_secret_key"
-    algorithm = "HS256"
-    token_data = {"sub": "testuser"}
-    access_token = jwt.encode(token_data, secret_key, algorithm=algorithm)
+    # Create a dummy token (the actual value doesn't matter as we're mocking the validation)
+    dummy_token = "dummy_token"
 
     # Make request
-    headers = {"Authorization": f"Bearer {access_token}"}
+    headers = {"Authorization": f"Bearer {dummy_token}"}
 
-    with patch('main.get_secret_key', return_value=secret_key), \
-            patch('main.get_user', return_value={"username": "testuser", "email": "test@example.com"}), \
-            patch('main.get_current_user', return_value="testuser"):  # Changed this line
+    with patch('main.get_user_auth_service') as mock_get_auth_service:
+        mock_auth_service = mock_get_auth_service.return_value
+        # Ensure that authenticate_user_by_token returns a user object
+        mock_auth_service.authenticate_user_by_token.return_value = type('User', (), {'user_name': 'testuser'})()
+
         response = client.post("/summarize", json=test_data, headers=headers)
 
         print(f"Response status code: {response.status_code}")

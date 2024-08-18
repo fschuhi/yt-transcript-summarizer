@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytest
 from models.user import User
-from repositories.user_repository import UserRepository
+from repositories.user_db_repository import UserDBRepository
 import tests.db_utils as db_utils
 from utils.auth_utils import AuthenticationUtils
 
@@ -38,13 +38,13 @@ def test_user_model(setup_database):
     password = 'hashed_password'
     token = 'test_token'
     user = create_default_user(password=password, token=token)
-    user_repository = UserRepository(db_session)
+    user_repository = UserDBRepository(db_session)
 
     # Add the user to the session and commit
     user_repository.create(user)
 
     # Reload the user from the database
-    reloaded_user = user_repository.get_by_id(user_id=user.user_id)
+    reloaded_user = user_repository.get_by_identifier(identifier=user.user_name)
 
     # Check that the fields match
     assert isinstance(reloaded_user, User)
@@ -66,10 +66,10 @@ def test_user_repository_get_by_user_name(setup_database):
     password = 'hashed_password'
     token = 'test_token'
     user = create_default_user(password=password, token=token)
-    user_repository = UserRepository(db_session)
+    user_repository = UserDBRepository(db_session)  # Use UserDBRepository
 
     # Add the user to the session and commit
     user_repository.create(user)
-    reloaded_user = user_repository.get_by_user_name(user_name=user.user_name)
+    reloaded_user = user_repository.get_by_identifier(identifier=user.user_name)  # Use get_by_identifier
     assert isinstance(reloaded_user, User)
     assert reloaded_user.user_name == user.user_name
