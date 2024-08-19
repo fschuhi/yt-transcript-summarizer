@@ -1,7 +1,8 @@
+from datetime import datetime
+from typing import Optional, Dict
+
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from typing import Optional, Dict
-from datetime import datetime
 
 Base = declarative_base()
 

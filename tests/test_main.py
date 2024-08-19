@@ -1,9 +1,10 @@
+from fastapi.testclient import TestClient
+import logging
 import pytest
 from unittest.mock import patch, MagicMock
-from .conftest import mock_openai_summary, client
-import logging
 
-from .test_utils import mock_repo_and_auth_service, mocked_client_post
+from .conftest import mock_openai_summary, client
+from .test_utils import mocked_client_post
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,13 @@ def test_token_endpoint_login_failure(client):
 
 @patch('main.get_youtube_data')
 @patch('main.openai_utils.summarize_text')
-def test_summarize_endpoint_authorized(mock_summarize_text, mock_get_youtube_data, client, mock_openai_summary, mock_youtube_data):
+def test_summarize_endpoint_authorized(
+        mock_summarize_text,
+        mock_get_youtube_data,
+        client: TestClient,
+        mock_openai_summary,
+        mock_youtube_data
+):
     # Setup mock data
     mock_get_youtube_data.return_value = mock_youtube_data
     mock_summarize_text.return_value = mock_openai_summary
@@ -95,28 +102,25 @@ def test_summarize_endpoint_authorized(mock_summarize_text, mock_get_youtube_dat
     # Make request
     headers = {"Authorization": f"Bearer {dummy_token}"}
 
-    mock_repo, mock_auth_service = mock_repo_and_auth_service()
+    mock_auth_service = MagicMock()
     mock_auth_service.authenticate_user_by_token.return_value = MagicMock(user_name='testuser')
 
-    # Patch the get_repository function to return our mock repository
-    with patch('main.get_repository', return_value=mock_repo):
-        # Patch the UserAuthService to return our mock service
-        with patch('main.UserAuthService', return_value=mock_auth_service):
-            response = client.post("/summarize", json=test_data, headers=headers)
-
-    print(f"Response status code: {response.status_code}")
-    print(f"Response content: {response.content}")
+    response, response_json = mocked_client_post(
+        client,
+        mock_auth_service,
+        "/summarize",
+        json=test_data,
+        headers=headers)
 
     assert response.status_code == 200
 
     # Assert response
-    response_data = response.json()
-    assert "summary" in response_data
-    assert response_data["summary"] == mock_openai_summary
-    assert "word_count" in response_data
-    assert response_data["word_count"] == len(mock_openai_summary.split())
-    assert "metadata" in response_data
-    assert response_data["metadata"] == mock_youtube_data["metadata"]
+    assert "summary" in response_json
+    assert response_json["summary"] == mock_openai_summary
+    assert "word_count" in response_json
+    assert response_json["word_count"] == len(mock_openai_summary.split())
+    assert "metadata" in response_json
+    assert response_json["metadata"] == mock_youtube_data["metadata"]
 
     # Verify mock calls
     mock_get_youtube_data.assert_called_once_with("py5byOOHZM8")
