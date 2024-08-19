@@ -1,19 +1,21 @@
-from fastapi import FastAPI, Request, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
+import colorama
+from dotenv import load_dotenv
+from functools import lru_cache
+import logging
+import os
 from pydantic import BaseModel
-from utils.youtube_utils import get_youtube_data
-from utils import openai_utils
 import re
 from typing import Optional
-import os
-from dotenv import load_dotenv
-import logging
-from functools import lru_cache
-import colorama
-from services.user_auth_service import UserAuthService
+
+from fastapi import FastAPI, Request, HTTPException, Depends, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
 from repositories.repository_provider import get_repository
 from services.service_interfaces import IUserRepository
+from services.user_auth_service import UserAuthService
+from utils.youtube_utils import get_youtube_data
+from utils import openai_utils
 
 colorama.init()
 
