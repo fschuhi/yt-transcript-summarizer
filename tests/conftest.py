@@ -15,7 +15,7 @@ from jose import jwt
 from main import app
 from repositories.user_json_repository import UserJsonRepository
 from services.user_auth_service import UserAuthService
-from utils import bootstrap_db
+from scripts import bootstrap_db
 
 logger = logging.getLogger(__name__)
 
