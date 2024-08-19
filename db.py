@@ -26,7 +26,6 @@ if not IN_CI:
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@lru_cache
 def get_db():
     if IN_CI:
         return None

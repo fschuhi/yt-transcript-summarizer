@@ -1,11 +1,14 @@
 import bcrypt
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import logging
 import os
 from typing import Optional
 
 # noinspection PyPackageRequirements
 from jose import jwt
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -38,6 +41,7 @@ class AuthenticationUtils:
 
     @staticmethod
     def generate_jwt_token(username: str) -> str:
+        logger.info(f"Generating JWT token with SECRET_KEY: {SECRET_KEY[:5]}...")  # Log first 5 chars for security
         return AuthenticationUtils.create_access_token(data={"sub": username})
 
     @staticmethod

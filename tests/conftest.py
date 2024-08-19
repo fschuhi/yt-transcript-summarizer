@@ -191,7 +191,11 @@ def mock_env_variables(monkeypatch, mock_api_key_provider: MockAPIKeyProvider, m
         monkeypatch.setenv(key, value)
 
     # Set JWT-related variables
-    monkeypatch.setenv("SECRET_KEY", mock_token_provider.secret_key)
+    # monkeypatch.setenv("SECRET_KEY", mock_token_provider.secret_key)
+    mock_secret_key = mock_token_provider.secret_key
+    monkeypatch.setenv("SECRET_KEY", mock_secret_key)
+    print(f"Mock SECRET_KEY set to: {mock_secret_key[:5]}...")  # Print first 5 chars for security
+
     monkeypatch.setenv("ALGORITHM", mock_token_provider.algorithm)
     monkeypatch.setenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(mock_token_provider.expire_minutes))
 
