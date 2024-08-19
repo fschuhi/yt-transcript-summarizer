@@ -45,6 +45,9 @@ venv/
 *.log
 *.sqlite
 
+# Alembic versions
+alembic/versions/
+
 # Project specific
 test_main.http
 update-ecr.bat
@@ -56,7 +59,10 @@ tmp/
 postgres-data_test
 *.stat
 /postgres-data
+users.json
 dirlist.txt
 filelist.txt
 filesdump.txt
 errors.txt
+github_errors.txt
+output.txt

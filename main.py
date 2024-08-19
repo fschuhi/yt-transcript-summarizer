@@ -1,21 +1,24 @@
-from fastapi import FastAPI, Request, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
+import colorama
+from dotenv import load_dotenv
+from functools import lru_cache
+import logging
+import os
 from pydantic import BaseModel
+import re
+import sys
+from typing import Optional
+
+from fastapi import FastAPI, Request, HTTPException, Depends, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from repositories.repository_provider import get_repository
+from services.service_interfaces import IUserRepository
+from services.user_auth_service import UserAuthService
+
+# do not change, used in test_summarize_endpoint_authorized for @patch
 from utils.youtube_utils import get_youtube_data
 from utils import openai_utils
-import re
-from typing import Optional
-import os
-from dotenv import load_dotenv
-import logging
-from functools import lru_cache
-import colorama
-from utils.auth_utils import hash_password, verify_password, create_access_token
-from utils.user_data import get_user, add_user
-# noinspection PyPackageRequirements
-from jose import JWTError, jwt
-
 
 colorama.init()
 
@@ -40,13 +43,11 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.StreamHandler()
+        logging.StreamHandler(sys.stdout)
     ]
 )
 
 logger = logging.getLogger(__name__)
-
-# templates = Jinja2Templates(directory="templates")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -68,23 +69,23 @@ def get_secret_key():
     return os.getenv("SECRET_KEY")
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    repo: IUserRepository = Depends(get_repository)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    user_auth_service = UserAuthService(repo)
     try:
-        payload = jwt.decode(token, get_secret_key(), algorithms=["HS256"])
-        username: str = payload.get("sub")
-        if username is None:
+        user = user_auth_service.authenticate_user_by_token(token)
+        if user is None:
             raise credentials_exception
-    except JWTError:
+        return user.user_name
+    except Exception:
         raise credentials_exception
-    user = get_user(username)
-    if user is None:
-        raise credentials_exception
-    return username  # Return just the username
 
 
 def extract_video_id(input_string: str) -> Optional[str]:
@@ -126,39 +127,35 @@ async def health_check():
 
 
 @app.post("/register")
-async def register(user: UserCreate):
+async def register(user: UserCreate, repo: IUserRepository = Depends(get_repository)):
     logger.info(f"Received registration request: {user.username}, {user.email}")
-    if get_user(user.username):
-        logger.warning(f"Username already registered: {user.username}")
-        raise HTTPException(status_code=400, detail="Username already registered")
-    hashed_password = hash_password(user.password)
-    add_user(user.username, user.email, hashed_password)
-    logger.info(f"User registered successfully: {user.username}")
-    return {"message": "User registered successfully"}
+    user_auth_service = UserAuthService(repo)
+    try:
+        user_auth_service.register_user(user.username, user.email, user.password)
+        logger.info(f"User registered successfully: {user.username}")
+        return {"message": "User registered successfully"}
+    except ValueError as e:
+        logger.warning(f"Registration failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), repo: IUserRepository = Depends(get_repository)):
     logger.info(f"Login attempt received for user: {form_data.username}")
+    user_auth_service = UserAuthService(repo)
     try:
-        user = get_user(form_data.username)
+        user = user_auth_service.authenticate_user(form_data.username, form_data.password)
         if not user:
-            logger.warning(f"User not found: {form_data.username}")
+            logger.warning(f"Invalid credentials for user: {form_data.username}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
             )
-        if not verify_password(form_data.password, user['password']):
-            logger.warning(f"Invalid password for user: {form_data.username}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-            )
+        access_token = user_auth_service.generate_token(user)
         logger.info(f"Login successful for user: {form_data.username}")
-        access_token = create_access_token(data={"sub": form_data.username})
         return {"access_token": access_token, "token_type": "bearer"}
-    except HTTPException as he:
-        raise he
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Unexpected error during login: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

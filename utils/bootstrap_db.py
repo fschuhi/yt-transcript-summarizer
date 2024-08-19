@@ -1,11 +1,12 @@
+import argparse
+import logging
 import os
-from sqlalchemy import create_engine
+
 from alembic.config import Config
 from alembic import command
-import logging
+from sqlalchemy import create_engine, text
+
 from logging.config import fileConfig
-from sqlalchemy import text
-import argparse
 
 
 def initialize_alembic_logger(alembic_config_file_name: str):

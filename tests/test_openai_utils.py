@@ -1,26 +1,13 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from utils import openai_utils
-from utils.openai_utils import summarize_text
-from .test_helpers import get_mock_youtube_data, mock_openai_summary,  mock_env_api_keys
-
 # necessary, even if PyCharm says "unused", see also ((UHAEBLK))
 # noinspection PyUnresolvedReferences
-from .test_helpers import MockAPIKeyProvider, mock_api_key_provider
+from tests.conftest import MockAPIKeyProvider, mock_api_key_provider, mock_env_api_keys, mock_openai_summary, \
+    mock_youtube_data
 
-
-@pytest.fixture
-def mock_youtube_data():
-    """
-    Fixture providing mock YouTube data.
-
-    This fixture uses the get_mock_youtube_data() function from test_helpers
-    to load pre-defined mock data for YouTube transcripts and metadata.
-
-    :return: A dictionary containing mock transcript and metadata for testing.
-    """
-    return get_mock_youtube_data()
+from utils import openai_utils
+from utils.openai_utils import summarize_text
 
 
 @patch.object(openai_utils, 'OpenAI')

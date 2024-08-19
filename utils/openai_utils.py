@@ -1,7 +1,7 @@
-# openai_utils.py
 import os
-import re
 from dotenv import load_dotenv
+import re
+
 from openai import OpenAI
 
 # Load environment variables

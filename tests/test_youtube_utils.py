@@ -1,10 +1,6 @@
 import pytest
 from unittest.mock import patch
 
-from utils import youtube_utils
-from utils.youtube_utils import get_youtube_data
-from .test_helpers import get_mock_youtube_data, mock_env_api_keys
-
 # The following imports are required even though they appear unused.
 # MockAPIKeyProvider and mock_api_key_provider are used indirectly
 # through the mock_env_api_keys fixture, which is essential for setting up
@@ -12,20 +8,10 @@ from .test_helpers import get_mock_youtube_data, mock_env_api_keys
 # cause test failures due to missing fixtures.
 # see also ((UHAEBLK))
 # noinspection PyUnresolvedReferences
-from .test_helpers import MockAPIKeyProvider, mock_api_key_provider
+from tests.conftest import MockAPIKeyProvider, mock_api_key_provider, mock_env_api_keys
 
-
-@pytest.fixture
-def mock_youtube_data():
-    """
-    Fixture providing mock YouTube data.
-
-    This fixture uses the get_mock_youtube_data() function from test_helpers
-    to load pre-defined mock data for YouTube transcripts and metadata.
-
-    :return: A dictionary containing mock transcript and metadata for testing.
-    """
-    return get_mock_youtube_data()
+from utils import youtube_utils
+from utils.youtube_utils import get_youtube_data
 
 
 @patch.object(youtube_utils, "get_youtube_transcript")
@@ -40,7 +26,7 @@ def test_get_youtube_data(mock_get_video_metadata, mock_get_youtube_transcript, 
     :param mock_get_video_metadata: Mocked version of get_video_metadata function
     :param mock_get_youtube_transcript: Mocked version of get_youtube_transcript function
     :param mock_youtube_data: Fixture providing mock YouTube data
-    :param mock_env_api_keys: Fixture setting dummy API keys in the environment, autouse=True in test_helpers.py
+    :param mock_env_api_keys: Fixture setting dummy API keys in the environment, autouse=True in test_helpers.py (TODO: review)
      """
     # Unpack mock_data once
     _mock_youtube_data = mock_youtube_data
