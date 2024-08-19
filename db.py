@@ -28,9 +28,14 @@ if not IN_CI:
 
 def get_db():
     if IN_CI:
-        return None
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+        # Yield a mock session or a null object
+        class MockSession:
+            def close(self):
+                pass
+        yield MockSession()
+    else:
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
