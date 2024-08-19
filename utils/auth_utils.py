@@ -1,8 +1,9 @@
 import bcrypt
-from typing import Optional
 from datetime import datetime, timedelta
-import os
 from dotenv import load_dotenv
+import os
+from typing import Optional
+
 # noinspection PyPackageRequirements
 from jose import jwt
 

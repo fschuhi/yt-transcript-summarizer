@@ -1,14 +1,15 @@
 import ast
-import os
-import logging
 from datetime import datetime, timedelta
-from typing import Dict
-
-import pytest
 from dotenv import load_dotenv
-from fastapi.testclient import TestClient
-from jose import jwt
+import logging
+import os
+import pytest
+from typing import Dict
 from unittest.mock import patch
+
+from fastapi.testclient import TestClient
+# noinspection PyPackageRequirements
+from jose import jwt
 
 from main import app
 from repositories.user_json_repository import UserJsonRepository

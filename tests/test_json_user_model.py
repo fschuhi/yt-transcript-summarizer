@@ -1,4 +1,5 @@
 import pytest
+
 from models.user import User
 from services.user_auth_service import UserAlreadyExistsError
 from tests.conftest import user_repository, user_auth_service

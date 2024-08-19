@@ -1,8 +1,9 @@
 import json
+import os
 from typing import Optional, List, Dict
+
 from models.user import User
 from services.service_interfaces import IUserRepository
-import os
 
 
 class UserJsonRepository(IUserRepository):

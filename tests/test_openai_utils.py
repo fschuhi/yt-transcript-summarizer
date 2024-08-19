@@ -1,13 +1,13 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from utils import openai_utils
-from utils.openai_utils import summarize_text
-
 # necessary, even if PyCharm says "unused", see also ((UHAEBLK))
 # noinspection PyUnresolvedReferences
 from tests.conftest import MockAPIKeyProvider, mock_api_key_provider, mock_env_api_keys, mock_openai_summary, \
     mock_youtube_data
+
+from utils import openai_utils
+from utils.openai_utils import summarize_text
 
 
 @patch.object(openai_utils, 'OpenAI')

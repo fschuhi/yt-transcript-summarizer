@@ -1,12 +1,14 @@
+import logging
 import os
 from typing import Callable
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
+
+from db import get_db
+from services.service_interfaces import IUserRepository
 from .user_json_repository import UserJsonRepository
 from .user_db_repository import UserDBRepository
-from services.service_interfaces import IUserRepository
-from db import get_db
-import logging
 
 logger = logging.getLogger(__name__)
 

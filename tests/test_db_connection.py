@@ -1,9 +1,9 @@
-# conftest.py
-import os
 import pytest
+
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+
 import tests.db_utils as db_utils
+
 
 # test_db_connection.py
 @pytest.mark.db

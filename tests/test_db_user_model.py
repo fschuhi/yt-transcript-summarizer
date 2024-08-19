@@ -1,5 +1,6 @@
 from datetime import datetime
 import pytest
+
 from models.user import User
 from repositories.user_db_repository import UserDBRepository
 import tests.db_utils as db_utils

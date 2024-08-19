@@ -1,5 +1,7 @@
 from typing import Optional, List, cast
+
 from sqlalchemy.orm import Session
+
 from models.user import User
 from services.service_interfaces import IUserRepository
 

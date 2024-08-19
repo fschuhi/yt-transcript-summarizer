@@ -1,19 +1,16 @@
+from dotenv import load_dotenv
+import logging
+import os
 from typing import Union, List, Dict
-from youtube_transcript_api import YouTubeTranscriptApi
 
 # noinspection PyPackageRequirements
 from googleapiclient.discovery import build
-
 # noinspection PyPackageRequirements
 from googleapiclient.errors import HttpError
-
-import os
-from dotenv import load_dotenv
+from youtube_transcript_api import YouTubeTranscriptApi
 
 # see ((NGZFOQF)) below
-import logging
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
-
 
 # Load environment variables
 load_dotenv()

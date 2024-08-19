@@ -1,7 +1,5 @@
-# dependencies.py
-
-import sys
 import subprocess
+import sys
 
 
 def install_requirements():

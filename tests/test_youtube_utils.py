@@ -1,9 +1,6 @@
 import pytest
 from unittest.mock import patch
 
-from utils import youtube_utils
-from utils.youtube_utils import get_youtube_data
-
 # The following imports are required even though they appear unused.
 # MockAPIKeyProvider and mock_api_key_provider are used indirectly
 # through the mock_env_api_keys fixture, which is essential for setting up
@@ -12,6 +9,9 @@ from utils.youtube_utils import get_youtube_data
 # see also ((UHAEBLK))
 # noinspection PyUnresolvedReferences
 from tests.conftest import MockAPIKeyProvider, mock_api_key_provider, mock_env_api_keys
+
+from utils import youtube_utils
+from utils.youtube_utils import get_youtube_data
 
 
 @patch.object(youtube_utils, "get_youtube_transcript")
