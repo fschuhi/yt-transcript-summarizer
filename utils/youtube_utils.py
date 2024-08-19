@@ -1,76 +1,63 @@
+"""Utilities for fetching YouTube video transcripts and metadata."""
+
 import logging
 import os
 from typing import Dict, List, Union
 
 from dotenv import load_dotenv
-
 # noinspection PyPackageRequirements
 from googleapiclient.discovery import build
-
 # noinspection PyPackageRequirements
 from googleapiclient.errors import HttpError
 from youtube_transcript_api import YouTubeTranscriptApi
 
-# see ((NGZFOQF)) below
+# Suppress googleapiclient.discovery_cache info messages
 logging.getLogger("googleapiclient.discovery_cache").setLevel(logging.ERROR)
 
-# Load environment variables
 load_dotenv()
 
-# Get the YouTube API key from environment variables
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 if YOUTUBE_API_KEY:
-    print(
-        f"YouTube API Key: {YOUTUBE_API_KEY[:5]}..."
-    )  # Print first 5 characters for security
+    print(f"YouTube API Key: {YOUTUBE_API_KEY[:5]}...")  # Print first 5 chars for security
 else:
     print("YouTube API Key not found in environment variables.")
 
 
 def get_youtube_transcript(
-    video_id: str, include_timestamps: bool = True
+        video_id: str, include_timestamps: bool = True
 ) -> Union[List[Dict[str, Union[str, float]]], List[str]]:
-    """
-    Retrieves the transcript for a YouTube video using youtube_transcript_api.
+    """Retrieve the transcript for a YouTube video.
 
-    :param video_id: The YouTube video ID
-    :param include_timestamps: Whether to include timestamps in the output
-    :return: A list of transcript segments, either with or without timestamps
+    Args:
+        video_id: The YouTube video ID.
+        include_timestamps: Whether to include timestamps in the output.
+    Returns: List of transcript segments, with or without timestamps.
     """
     try:
-        # Fetch the transcript
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
-
-        if include_timestamps:
-            return transcript
-        else:
-            return [segment["text"] for segment in transcript]
+        return transcript if include_timestamps else [segment["text"] for segment in transcript]
     except Exception as e:
-        print(f"An error occurred while fetching transcript: {str(e)}")
+        print(f"Error fetching transcript: {str(e)}")
         return []
 
 
 def get_video_metadata(video_id: str) -> Dict[str, Union[str, int]]:
-    """
-    Retrieves metadata for a YouTube video using the YouTube Data API.
+    """Retrieve metadata for a YouTube video using the YouTube Data API.
 
-    :param video_id: The YouTube video ID
-    :return: A dictionary containing video metadata
+    Args:
+        video_id: The YouTube video ID.
+    Returns: Dictionary containing video metadata.
     """
     if not YOUTUBE_API_KEY:
         print("YouTube API key not found in environment variables.")
         return {}
 
     try:
-        # ((NGZFOQF))
-        # generates an info from the api: "file_cache is only supported with oauth2client<4.0.0" (?)
-        # we suppress it w/ setting the loglevel above
+        # Build the YouTube API client
         youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
 
-        # Call the videos().list method to retrieve video details
-        video_response = (
-            youtube.videos().list(part="snippet,statistics", id=video_id).execute()
-        )
+        # Fetch video details
+        video_response = youtube.videos().list(part="snippet,statistics", id=video_id).execute()
 
         if not video_response["items"]:
             raise ValueError(f"No video found with id: {video_id}")
@@ -80,7 +67,7 @@ def get_video_metadata(video_id: str) -> Dict[str, Union[str, int]]:
         statistics = video_data["statistics"]
 
         # Extract relevant metadata
-        metadata = {
+        return {
             "title": snippet["title"],
             "description": snippet["description"],
             "channel_title": snippet["channelTitle"],
@@ -91,26 +78,23 @@ def get_video_metadata(video_id: str) -> Dict[str, Union[str, int]]:
             "comment_count": int(statistics.get("commentCount", 0)),
         }
 
-        return metadata
-
     except HttpError as e:
-        print(f"An HTTP error occurred: {str(e)}")
+        print(f"HTTP error occurred: {str(e)}")
         return {}
     except Exception as e:
-        print(f"An error occurred while fetching video metadata: {str(e)}")
+        print(f"Error fetching video metadata: {str(e)}")
         return {}
 
 
 def get_youtube_data(
-    video_id: str,
+        video_id: str,
 ) -> Dict[str, Union[List[str], Dict[str, Union[str, int]]]]:
-    """
-    Retrieves both transcript and metadata for a YouTube video.
+    """Retrieve both transcript and metadata for a YouTube video.
 
-    :param video_id: The YouTube video ID
-    :return: A dictionary containing the transcript and metadata
+    Args:
+        video_id: The YouTube video ID.
+    Returns: Dictionary containing the transcript and metadata.
     """
     transcript = get_youtube_transcript(video_id, include_timestamps=False)
     metadata = get_video_metadata(video_id)
-
     return {"transcript": transcript, "metadata": metadata}
