@@ -1,3 +1,12 @@
+"""
+Main FastAPI application module for the YouTube Transcript Summarizer.
+
+This module sets up the FastAPI application, configures CORS, logging, and defines
+the API endpoints for user registration, authentication, and video summarization.
+It uses various utility functions and services to handle database operations,
+user authentication, and interaction with external APIs (YouTube and OpenAI).
+"""
+
 import logging
 import os
 import re
@@ -35,9 +44,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Static files and logging setup (unchanged)
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -51,25 +57,60 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 class SummarizeRequest(BaseModel):
+    """
+    Pydantic model for the summarize request payload.
+
+    Attributes:
+        video_url (str): The URL of the YouTube video to summarize.
+        summary_length (int): The desired length of the summary in words.
+        used_model (str): The OpenAI model to use for summarization.
+    """
     video_url: str
     summary_length: int
     used_model: str
 
 
 class UserCreate(BaseModel):
+    """
+    Pydantic model for user registration payload.
+
+    Attributes:
+        username (str): The desired username for the new user.
+        email (str): The email address of the new user.
+        password (str): The password for the new user account.
+    """
     username: str
     email: str
     password: str
 
 
 @lru_cache()
-def get_secret_key():
+def get_secret_key() -> str:
+    """
+    Retrieve the secret key from environment variables.
+
+    Returns:
+        str: The secret key used for JWT token encoding/decoding.
+    """
     return os.getenv("SECRET_KEY")
 
 
 def get_current_user(
     token: str = Depends(oauth2_scheme), repo: IUserRepository = Depends(get_repository)
-):
+) -> str:
+    """
+    Dependency to get the current authenticated user.
+
+    Args:
+        token (str): The JWT token from the request.
+        repo (IUserRepository): The user repository for database operations.
+
+    Returns:
+        str: The username of the authenticated user.
+
+    Raises:
+        HTTPException: If the credentials are invalid or expired.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -86,6 +127,15 @@ def get_current_user(
 
 
 def extract_video_id(input_string: str) -> Optional[str]:
+    """
+    Extract the YouTube video ID from various URL formats or direct ID input.
+
+    Args:
+        input_string (str): The input string containing a YouTube URL or video ID.
+
+    Returns:
+        Optional[str]: The extracted video ID, or None if no valid ID is found.
+    """
     patterns = [
         r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)",
         r"(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)",
@@ -110,8 +160,11 @@ async def read_root(request: Request):
     This endpoint is no longer accessible due to changes in authentication method
     and overall API structure. It now returns a 403 Forbidden response.
 
-    :param request: The incoming request
-    :raises HTTPException: Always raises a 403 Forbidden exception
+    Args:
+        request (Request): The incoming request object.
+
+    Raises:
+        HTTPException: Always raises a 403 Forbidden exception.
     """
     logger.info("Received request for root endpoint (forbidden)")
     raise HTTPException(status_code=403, detail="Access to this endpoint is forbidden")
@@ -119,12 +172,31 @@ async def read_root(request: Request):
 
 @app.get("/health")
 async def health_check():
+    """
+    Endpoint to check the health status of the API.
+
+    Returns:
+        dict: A dictionary containing the health status of the API.
+    """
     logger.info("Health check endpoint hit")
     return {"status": "healthy"}
 
 
 @app.post("/register")
 async def register(user: UserCreate, repo: IUserRepository = Depends(get_repository)):
+    """
+    Endpoint for user registration.
+
+    Args:
+        user (UserCreate): The user registration data.
+        repo (IUserRepository): The user repository for database operations.
+
+    Returns:
+        dict: A message indicating successful registration.
+
+    Raises:
+        HTTPException: If registration fails due to existing username/email or other errors.
+    """
     logger.info(f"Received registration request: {user.username}, {user.email}")
     user_auth_service = UserAuthService(repo)
     try:
@@ -141,6 +213,19 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     repo: IUserRepository = Depends(get_repository),
 ):
+    """
+    Endpoint for user login and token generation.
+
+    Args:
+        form_data (OAuth2PasswordRequestForm): The login credentials.
+        repo (IUserRepository): The user repository for database operations.
+
+    Returns:
+        dict: A dictionary containing the access token and token type.
+
+    Raises:
+        HTTPException: If login fails due to invalid credentials or other errors.
+    """
     logger.info(f"Login attempt received for user: {form_data.username}")
     user_auth_service = UserAuthService(repo)
     try:
@@ -170,6 +255,22 @@ async def login(
 async def summarize(
     summarize_request: SummarizeRequest, current_user: str = Depends(get_current_user)
 ):
+    """
+    Endpoint to summarize a YouTube video transcript.
+
+    This function extracts the video ID from the provided URL, retrieves the transcript
+    and metadata, and generates a summary using the specified OpenAI model.
+
+    Args:
+        summarize_request (SummarizeRequest): The request containing video URL and summarization parameters.
+        current_user (str): The authenticated user making the request.
+
+    Returns:
+        dict: A dictionary containing the generated summary, word count, and video metadata.
+
+    Raises:
+        HTTPException: If there's an error in video ID extraction, transcript retrieval, or summarization.
+    """
     logger.info(f"Received summarize request from user: {current_user}")
 
     try:
