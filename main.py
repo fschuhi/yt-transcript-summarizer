@@ -1,24 +1,24 @@
-import colorama
-from dotenv import load_dotenv
-from functools import lru_cache
 import logging
 import os
-from pydantic import BaseModel
 import re
 import sys
+from functools import lru_cache
 from typing import Optional
 
-from fastapi import FastAPI, Request, HTTPException, Depends, status
+import colorama
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel
 
 from repositories.repository_provider import get_repository
 from services.service_interfaces import IUserRepository
 from services.user_auth_service import UserAuthService
+from utils import openai_utils
 
 # do not change, used in test_summarize_endpoint_authorized for @patch
 from utils.youtube_utils import get_youtube_data
-from utils import openai_utils
 
 colorama.init()
 
@@ -42,9 +42,7 @@ app.add_middleware(
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
 logger = logging.getLogger(__name__)
@@ -70,8 +68,7 @@ def get_secret_key():
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    repo: IUserRepository = Depends(get_repository)
+    token: str = Depends(oauth2_scheme), repo: IUserRepository = Depends(get_repository)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -92,14 +89,14 @@ def extract_video_id(input_string: str) -> Optional[str]:
     patterns = [
         r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)",
         r"(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)",
-        r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)"
+        r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)",
     ]
     for pattern in patterns:
         match = re.search(pattern, input_string)
         if match:
             return match.group(1)
 
-    if re.match(r'^[a-zA-Z0-9_-]{11}$', input_string):
+    if re.match(r"^[a-zA-Z0-9_-]{11}$", input_string):
         return input_string
 
     return None
@@ -140,11 +137,16 @@ async def register(user: UserCreate, repo: IUserRepository = Depends(get_reposit
 
 
 @app.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), repo: IUserRepository = Depends(get_repository)):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    repo: IUserRepository = Depends(get_repository),
+):
     logger.info(f"Login attempt received for user: {form_data.username}")
     user_auth_service = UserAuthService(repo)
     try:
-        user = user_auth_service.authenticate_user(form_data.username, form_data.password)
+        user = user_auth_service.authenticate_user(
+            form_data.username, form_data.password
+        )
         if not user:
             logger.warning(f"Invalid credentials for user: {form_data.username}")
             raise HTTPException(
@@ -158,11 +160,16 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), repo: IUserRep
         raise
     except Exception as e:
         logger.error(f"Unexpected error during login: {str(e)}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        )
 
 
 @app.post("/summarize")
-async def summarize(summarize_request: SummarizeRequest, current_user: str = Depends(get_current_user)):
+async def summarize(
+    summarize_request: SummarizeRequest, current_user: str = Depends(get_current_user)
+):
     logger.info(f"Received summarize request from user: {current_user}")
 
     try:
@@ -174,23 +181,27 @@ async def summarize(summarize_request: SummarizeRequest, current_user: str = Dep
         logger.info(f"Extracted video ID: {video_id}")
         youtube_data = get_youtube_data(video_id)
 
-        if not youtube_data['transcript']:
+        if not youtube_data["transcript"]:
             logger.error(f"Failed to retrieve transcript for video ID: {video_id}")
             raise HTTPException(status_code=400, detail="Failed to retrieve transcript")
 
-        full_text = ' '.join(youtube_data['transcript'])
+        full_text = " ".join(youtube_data["transcript"])
         logger.info(f"Transcript retrieved. Length: {len(full_text)} characters")
 
-        summary = openai_utils.summarize_text(full_text, youtube_data['metadata'], summarize_request.summary_length,
-                                              summarize_request.used_model)
+        summary = openai_utils.summarize_text(
+            full_text,
+            youtube_data["metadata"],
+            summarize_request.summary_length,
+            summarize_request.used_model,
+        )
         logger.info(f"Summary generated. Length: {len(summary)} characters")
 
         word_count = len(summary.split())
 
         return {
-            'summary': summary,
-            'word_count': word_count,
-            'metadata': youtube_data['metadata']
+            "summary": summary,
+            "word_count": word_count,
+            "metadata": youtube_data["metadata"],
         }
     except Exception as e:
         logger.exception(f"Error in summarize endpoint: {str(e)}")
@@ -199,4 +210,5 @@ async def summarize(summarize_request: SummarizeRequest, current_user: str = Dep
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Type
+from typing import List, Optional, Type
 
 from models.user import User
 

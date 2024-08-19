@@ -12,9 +12,10 @@ def create_db_session():
     Session = sessionmaker(bind=engine)
     return Session()
 
+
 def init_engine():
     """Initialize the SQLAlchemy engine object."""
-    db_url = os.getenv('DATABASE_URL')
+    db_url = os.getenv("DATABASE_URL")
     global engine
     engine = create_engine(db_url)
     return engine

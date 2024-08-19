@@ -1,16 +1,18 @@
-from dotenv import load_dotenv
 import logging
 import os
-from typing import Union, List, Dict
+from typing import Dict, List, Union
+
+from dotenv import load_dotenv
 
 # noinspection PyPackageRequirements
 from googleapiclient.discovery import build
+
 # noinspection PyPackageRequirements
 from googleapiclient.errors import HttpError
 from youtube_transcript_api import YouTubeTranscriptApi
 
 # see ((NGZFOQF)) below
-logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+logging.getLogger("googleapiclient.discovery_cache").setLevel(logging.ERROR)
 
 # Load environment variables
 load_dotenv()
@@ -18,13 +20,16 @@ load_dotenv()
 # Get the YouTube API key from environment variables
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 if YOUTUBE_API_KEY:
-    print(f"YouTube API Key: {YOUTUBE_API_KEY[:5]}...")  # Print first 5 characters for security
+    print(
+        f"YouTube API Key: {YOUTUBE_API_KEY[:5]}..."
+    )  # Print first 5 characters for security
 else:
     print("YouTube API Key not found in environment variables.")
 
 
-def get_youtube_transcript(video_id: str, include_timestamps: bool = True) -> Union[
-    List[Dict[str, Union[str, float]]], List[str]]:
+def get_youtube_transcript(
+    video_id: str, include_timestamps: bool = True
+) -> Union[List[Dict[str, Union[str, float]]], List[str]]:
     """
     Retrieves the transcript for a YouTube video using youtube_transcript_api.
 
@@ -60,31 +65,30 @@ def get_video_metadata(video_id: str) -> Dict[str, Union[str, int]]:
         # ((NGZFOQF))
         # generates an info from the api: "file_cache is only supported with oauth2client<4.0.0" (?)
         # we suppress it w/ setting the loglevel above
-        youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+        youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
 
         # Call the videos().list method to retrieve video details
-        video_response = youtube.videos().list(
-            part='snippet,statistics',
-            id=video_id
-        ).execute()
+        video_response = (
+            youtube.videos().list(part="snippet,statistics", id=video_id).execute()
+        )
 
-        if not video_response['items']:
+        if not video_response["items"]:
             raise ValueError(f"No video found with id: {video_id}")
 
-        video_data = video_response['items'][0]
-        snippet = video_data['snippet']
-        statistics = video_data['statistics']
+        video_data = video_response["items"][0]
+        snippet = video_data["snippet"]
+        statistics = video_data["statistics"]
 
         # Extract relevant metadata
         metadata = {
-            'title': snippet['title'],
-            'description': snippet['description'],
-            'channel_title': snippet['channelTitle'],
-            'channel_id': snippet['channelId'],
-            'publish_date': snippet['publishedAt'],
-            'view_count': int(statistics.get('viewCount', 0)),
-            'like_count': int(statistics.get('likeCount', 0)),
-            'comment_count': int(statistics.get('commentCount', 0)),
+            "title": snippet["title"],
+            "description": snippet["description"],
+            "channel_title": snippet["channelTitle"],
+            "channel_id": snippet["channelId"],
+            "publish_date": snippet["publishedAt"],
+            "view_count": int(statistics.get("viewCount", 0)),
+            "like_count": int(statistics.get("likeCount", 0)),
+            "comment_count": int(statistics.get("commentCount", 0)),
         }
 
         return metadata
@@ -97,7 +101,9 @@ def get_video_metadata(video_id: str) -> Dict[str, Union[str, int]]:
         return {}
 
 
-def get_youtube_data(video_id: str) -> Dict[str, Union[List[str], Dict[str, Union[str, int]]]]:
+def get_youtube_data(
+    video_id: str,
+) -> Dict[str, Union[List[str], Dict[str, Union[str, int]]]]:
     """
     Retrieves both transcript and metadata for a YouTube video.
 
@@ -107,7 +113,4 @@ def get_youtube_data(video_id: str) -> Dict[str, Union[List[str], Dict[str, Unio
     transcript = get_youtube_transcript(video_id, include_timestamps=False)
     metadata = get_video_metadata(video_id)
 
-    return {
-        'transcript': transcript,
-        'metadata': metadata
-    }
+    return {"transcript": transcript, "metadata": metadata}

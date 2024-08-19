@@ -3,7 +3,9 @@ import sys
 
 
 def install_requirements():
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
+    )
 
 
 def ensure_dependencies():
@@ -11,7 +13,9 @@ def ensure_dependencies():
         install_requirements()
         print("All dependencies are installed.")
     except subprocess.CalledProcessError:
-        print("Failed to install dependencies. Please check your internet connection and try again.")
+        print(
+            "Failed to install dependencies. Please check your internet connection and try again."
+        )
 
 
 if __name__ == "__main__":

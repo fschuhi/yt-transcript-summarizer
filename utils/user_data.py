@@ -13,12 +13,12 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 
 # Define the path to users.json in the project root
-USER_DATA_FILE = os.path.join(project_root, 'users.json')
+USER_DATA_FILE = os.path.join(project_root, "users.json")
 
 
 def load_users() -> Dict[str, Dict]:
     try:
-        with open(USER_DATA_FILE, 'r') as file:
+        with open(USER_DATA_FILE, "r") as file:
             users = json.load(file)
         logger.info(f"Loaded {len(users)} users from {USER_DATA_FILE}")
         return users
@@ -31,7 +31,7 @@ def load_users() -> Dict[str, Dict]:
 
 
 def save_users(users: Dict[str, Dict]):
-    with open(USER_DATA_FILE, 'w') as file:
+    with open(USER_DATA_FILE, "w") as file:
         json.dump(users, file, indent=4)
 
 
@@ -40,7 +40,9 @@ def get_user(identifier: str) -> Optional[Dict]:
     user = users.get(identifier)
     if not user:
         # If username lookup fails, try email lookup
-        user = next((data for data in users.values() if data['email'] == identifier), None)
+        user = next(
+            (data for data in users.values() if data["email"] == identifier), None
+        )
     if user:
         logger.info(f"User found for identifier: {identifier}")
     else:
@@ -50,8 +52,5 @@ def get_user(identifier: str) -> Optional[Dict]:
 
 def add_user(username: str, email: str, hashed_password: str):
     users = load_users()
-    users[username] = {
-        'email': email,
-        'password': hashed_password
-    }
+    users[username] = {"email": email, "password": hashed_password}
     save_users(users)

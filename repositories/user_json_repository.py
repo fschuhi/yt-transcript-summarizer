@@ -1,29 +1,29 @@
 import json
 import os
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 from models.user import User
 from services.service_interfaces import IUserRepository
 
 
 class UserJsonRepository(IUserRepository):
-    def __init__(self, file_path: str = 'users.json'):
+    def __init__(self, file_path: str = "users.json"):
         self.file_path = file_path
 
     def _load_users(self) -> Dict[str, Dict]:
         if not os.path.exists(self.file_path):
             return {}
-        with open(self.file_path, 'r') as file:
+        with open(self.file_path, "r") as file:
             return json.load(file)
 
     def _save_users(self, users: Dict[str, Dict]):
-        with open(self.file_path, 'w') as file:
+        with open(self.file_path, "w") as file:
             json.dump(users, file, indent=4)
 
     def get_by_id(self, user_id: int) -> Optional[User]:
         users = self._load_users()
         for user_data in users.values():
-            if user_data['user_id'] == user_id:
+            if user_data["user_id"] == user_id:
                 return User.from_dict(user_data)
         return None
 
@@ -37,7 +37,7 @@ class UserJsonRepository(IUserRepository):
     def get_by_email(self, email: str) -> Optional[User]:
         users = self._load_users()
         for user_data in users.values():
-            if user_data['email'] == email:
+            if user_data["email"] == email:
                 return User.from_dict(user_data)
         return None
 

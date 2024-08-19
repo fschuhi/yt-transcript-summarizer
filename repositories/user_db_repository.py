@@ -1,4 +1,4 @@
-from typing import Optional, List, cast
+from typing import List, Optional, cast
 
 from sqlalchemy.orm import Session
 

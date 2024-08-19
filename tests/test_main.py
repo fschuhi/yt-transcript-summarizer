@@ -1,10 +1,11 @@
-from fastapi.testclient import TestClient
 import logging
-import pytest
 from typing import Dict
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from .conftest import mock_openai_summary, client
+import pytest
+from fastapi.testclient import TestClient
+
+from .conftest import client, mock_openai_summary
 from .test_utils import mocked_client_post
 
 logger = logging.getLogger(__name__)
@@ -29,13 +30,17 @@ def test_register_endpoint(client: TestClient):
     user_data = {
         "username": "newuser",
         "email": "newuser@example.com",
-        "password": "password123"
+        "password": "password123",
     }
 
     mock_auth_service = MagicMock()
-    mock_auth_service.register_user.return_value = None  # Simulate successful registration
+    mock_auth_service.register_user.return_value = (
+        None  # Simulate successful registration
+    )
 
-    response, response_json = mocked_client_post(client, mock_auth_service, "/register", json=user_data)
+    response, response_json = mocked_client_post(
+        client, mock_auth_service, "/register", json=user_data
+    )
 
     assert response.status_code == 200
     assert response_json == {"message": "User registered successfully"}
@@ -45,46 +50,50 @@ def test_register_endpoint(client: TestClient):
 
 
 def test_token_endpoint_login_success(client: TestClient):
-    login_data = {
-        "username": "testuser",
-        "password": "password123"
-    }
+    login_data = {"username": "testuser", "password": "password123"}
 
     mock_auth_service = MagicMock()
 
-    response, response_json = mocked_client_post(client, mock_auth_service, "/token", data=login_data)
+    response, response_json = mocked_client_post(
+        client, mock_auth_service, "/token", data=login_data
+    )
 
     assert response.status_code == 200
     assert "access_token" in response.json()
     assert response_json["token_type"] == "bearer"
-    mock_auth_service.authenticate_user.assert_called_once_with(login_data["username"], login_data["password"])
+    mock_auth_service.authenticate_user.assert_called_once_with(
+        login_data["username"], login_data["password"]
+    )
     mock_auth_service.generate_token.assert_called_once()
 
 
 def test_token_endpoint_login_failure(client: TestClient):
-    login_data = {
-        "username": "testuser",
-        "password": "wrongpassword"
-    }
+    login_data = {"username": "testuser", "password": "wrongpassword"}
 
     mock_auth_service = MagicMock()
-    mock_auth_service.authenticate_user.return_value = None  # Simulate failed authentication
+    mock_auth_service.authenticate_user.return_value = (
+        None  # Simulate failed authentication
+    )
 
-    response, response_json = mocked_client_post(client, mock_auth_service, "/token", data=login_data)
+    response, response_json = mocked_client_post(
+        client, mock_auth_service, "/token", data=login_data
+    )
 
     assert response.status_code == 401
     assert response_json["detail"] == "Incorrect username or password"
-    mock_auth_service.authenticate_user.assert_called_once_with(login_data["username"], login_data["password"])
+    mock_auth_service.authenticate_user.assert_called_once_with(
+        login_data["username"], login_data["password"]
+    )
 
 
-@patch('main.get_youtube_data')
-@patch('main.openai_utils.summarize_text')
+@patch("main.get_youtube_data")
+@patch("main.openai_utils.summarize_text")
 def test_summarize_endpoint_authorized(
-        mock_summarize_text: MagicMock,
-        mock_get_youtube_data: MagicMock,
-        client: TestClient,
-        mock_openai_summary: str,
-        mock_youtube_data: Dict
+    mock_summarize_text: MagicMock,
+    mock_get_youtube_data: MagicMock,
+    client: TestClient,
+    mock_openai_summary: str,
+    mock_youtube_data: Dict,
 ):
     # Setup mock data
     mock_get_youtube_data.return_value = mock_youtube_data
@@ -94,7 +103,7 @@ def test_summarize_endpoint_authorized(
     test_data = {
         "video_url": "https://www.youtube.com/watch?v=py5byOOHZM8",
         "summary_length": 300,
-        "used_model": "gpt-4-mini"
+        "used_model": "gpt-4-mini",
     }
 
     # Create a dummy token (the actual value doesn't matter as we're mocking the validation)
@@ -104,14 +113,13 @@ def test_summarize_endpoint_authorized(
     headers = {"Authorization": f"Bearer {dummy_token}"}
 
     mock_auth_service = MagicMock()
-    mock_auth_service.authenticate_user_by_token.return_value = MagicMock(user_name='testuser')
+    mock_auth_service.authenticate_user_by_token.return_value = MagicMock(
+        user_name="testuser"
+    )
 
     response, response_json = mocked_client_post(
-        client,
-        mock_auth_service,
-        "/summarize",
-        json=test_data,
-        headers=headers)
+        client, mock_auth_service, "/summarize", json=test_data, headers=headers
+    )
 
     assert response.status_code == 200
 
@@ -126,10 +134,10 @@ def test_summarize_endpoint_authorized(
     # Verify mock calls
     mock_get_youtube_data.assert_called_once_with("py5byOOHZM8")
     mock_summarize_text.assert_called_once_with(
-        ' '.join(mock_youtube_data['transcript']),
-        mock_youtube_data['metadata'],
+        " ".join(mock_youtube_data["transcript"]),
+        mock_youtube_data["metadata"],
         300,
-        "gpt-4-mini"
+        "gpt-4-mini",
     )
 
 
@@ -137,7 +145,7 @@ def test_summarize_endpoint_unauthorized(client):
     test_data = {
         "video_url": "https://www.youtube.com/watch?v=py5byOOHZM8",
         "summary_length": 300,
-        "used_model": "gpt-4-mini"
+        "used_model": "gpt-4-mini",
     }
     response = client.post("/summarize", json=test_data)
     assert response.status_code == 401

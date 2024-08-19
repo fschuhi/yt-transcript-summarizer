@@ -1,7 +1,7 @@
 import os
-from dotenv import load_dotenv
 import re
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
 # Load environment variables
@@ -21,10 +21,12 @@ def get_openai_client():
 
 
 def word_count(s):
-    return len(re.findall(r'\w+', s))
+    return len(re.findall(r"\w+", s))
 
 
-def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = "gpt-3.5-turbo") -> str:
+def summarize_text(
+    text: str, metadata: dict, max_words: int, used_model: str = "gpt-3.5-turbo"
+) -> str:
     client = get_openai_client()
     try:
         # Prepare the metadata string
@@ -41,14 +43,18 @@ def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = 
         response = client.chat.completions.create(
             model=used_model,
             messages=[
-                {"role": "system",
-                 "content": f"You are a helpful assistant that summarizes YouTube videos. Please summarize the "
-                            f"following video transcript in approximately {max_words} words. Use the provided metadata "
-                            f"to enhance your summary. It's important that your summary has at least {max_words} "
-                            f"words, but it also shouldn't have a word count that is significantly higher than "
-                            f"{max_words}."},
-                {"role": "user",
-                 "content": f"Here's the video metadata:\n{metadata_str}\n\nNow, summarize this transcript: {text}"}
+                {
+                    "role": "system",
+                    "content": f"You are a helpful assistant that summarizes YouTube videos. Please summarize the "
+                    f"following video transcript in approximately {max_words} words. Use the provided metadata "
+                    f"to enhance your summary. It's important that your summary has at least {max_words} "
+                    f"words, but it also shouldn't have a word count that is significantly higher than "
+                    f"{max_words}.",
+                },
+                {
+                    "role": "user",
+                    "content": f"Here's the video metadata:\n{metadata_str}\n\nNow, summarize this transcript: {text}",
+                },
             ],
             max_tokens=max_words * 4,  # A rough estimate, as tokens != words
             n=1,

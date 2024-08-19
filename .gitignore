@@ -45,9 +45,6 @@ venv/
 *.log
 *.sqlite
 
-# Alembic versions
-alembic/versions/
-
 # Project specific
 test_main.http
 update-ecr.bat
