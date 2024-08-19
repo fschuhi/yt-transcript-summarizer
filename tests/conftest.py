@@ -229,7 +229,7 @@ def user_auth_service(user_repository):
 
 
 @pytest.fixture
-def mock_youtube_data():
+def mock_youtube_data() -> Dict:
     """
     Fixture providing mock YouTube data.
 

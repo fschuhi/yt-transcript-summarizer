@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 import logging
 import pytest
+from typing import Dict
 from unittest.mock import patch, MagicMock
 
 from .conftest import mock_openai_summary, client
@@ -9,13 +10,13 @@ from .test_utils import mocked_client_post
 logger = logging.getLogger(__name__)
 
 
-def test_health_endpoint(client):
+def test_health_endpoint(client: TestClient):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
 
 
-def test_root_endpoint(client):
+def test_root_endpoint(client: TestClient):
     """
     Test that the root endpoint returns a 403 Forbidden status.
     """
@@ -24,7 +25,7 @@ def test_root_endpoint(client):
     assert response.json() == {"detail": "Access to this endpoint is forbidden"}
 
 
-def test_register_endpoint(client):
+def test_register_endpoint(client: TestClient):
     user_data = {
         "username": "newuser",
         "email": "newuser@example.com",
@@ -43,7 +44,7 @@ def test_register_endpoint(client):
     )
 
 
-def test_token_endpoint_login_success(client):
+def test_token_endpoint_login_success(client: TestClient):
     login_data = {
         "username": "testuser",
         "password": "password123"
@@ -60,7 +61,7 @@ def test_token_endpoint_login_success(client):
     mock_auth_service.generate_token.assert_called_once()
 
 
-def test_token_endpoint_login_failure(client):
+def test_token_endpoint_login_failure(client: TestClient):
     login_data = {
         "username": "testuser",
         "password": "wrongpassword"
@@ -79,11 +80,11 @@ def test_token_endpoint_login_failure(client):
 @patch('main.get_youtube_data')
 @patch('main.openai_utils.summarize_text')
 def test_summarize_endpoint_authorized(
-        mock_summarize_text,
-        mock_get_youtube_data,
+        mock_summarize_text: MagicMock,
+        mock_get_youtube_data: MagicMock,
         client: TestClient,
-        mock_openai_summary,
-        mock_youtube_data
+        mock_openai_summary: str,
+        mock_youtube_data: Dict
 ):
     # Setup mock data
     mock_get_youtube_data.return_value = mock_youtube_data

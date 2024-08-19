@@ -14,6 +14,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from repositories.repository_provider import get_repository
 from services.service_interfaces import IUserRepository
 from services.user_auth_service import UserAuthService
+
+# do not change, used in test_summarize_endpoint_authorized for @patch
 from utils.youtube_utils import get_youtube_data
 from utils import openai_utils
 
