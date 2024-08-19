@@ -1,3 +1,5 @@
+"""Configuration and fixtures for pytest in the FastAPI application."""
+
 import ast
 import logging
 import os
@@ -8,8 +10,6 @@ from unittest.mock import patch
 import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
-
-# noinspection PyPackageRequirements
 from jose import jwt
 
 from main import app
@@ -22,14 +22,12 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def client(mock_env_variables, mock_token_provider):
-    """
-    Create a test client for the FastAPI application with mocked JWT token validation.
+    """Create a test client for the FastAPI application with mocked JWT token validation.
 
-    This fixture is primarily used in test_main.py.
+    This fixture sets up a controlled environment for testing by using mock
+    environment variables and mocking the JWT token validation process.
 
-    :param mock_env_variables: Fixture that sets up mock environment variables.
-    :param mock_token_provider: Fixture that provides a MockTokenProvider instance.
-    :return: A TestClient instance for the FastAPI application.
+    Yields: An instance of TestClient for the FastAPI application.
     """
     dummy_username = "testuser"
 
@@ -41,10 +39,10 @@ def client(mock_env_variables, mock_token_provider):
 
 @pytest.fixture(scope="session")
 def setup_database():
-    """
-    Bootstrap the database before running the tests.
+    """Bootstrap the database before running the tests.
 
     This fixture is used globally and will only be executed once, before all the tests are run.
+    It ensures that the test database is properly set up and migrated.
     """
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     db_url = os.getenv("DATABASE_URL")
@@ -61,9 +59,7 @@ def setup_database():
 
 
 class MockAPIKeyProvider:
-    """
-    Centralized provider for mock API keys used in testing.
-    """
+    """Centralized provider for mock API keys used in testing."""
 
     def __init__(self):
         self.keys = {
@@ -73,46 +69,31 @@ class MockAPIKeyProvider:
         }
 
     def get_key(self, key_name: str) -> str:
-        """
-        Get a mock API key by name.
-
-        :param key_name: The name of the API key to retrieve.
-        :return: The mock API key value.
-        :raises KeyError: If the requested key name is not found.
-        """
+        """Get a mock API key by name."""
         return self.keys[key_name]
 
     def get_all_keys(self) -> Dict[str, str]:
-        """
-        Get all mock API keys.
-
-        :return: A dictionary of all mock API keys.
-        """
+        """Get all mock API keys."""
         return self.keys.copy()
 
 
 @pytest.fixture
-def mock_api_key_provider() -> MockAPIKeyProvider:
-    """
-    Provide a MockAPIKeyProvider instance.
+def mock_api_key_provider():
+    """Provide a MockAPIKeyProvider instance.
 
-    This fixture is used globally in various test files.
-
-    :return: An instance of MockAPIKeyProvider.
+    Returns: An instance of MockAPIKeyProvider.
     """
     return MockAPIKeyProvider()
 
 
 @pytest.fixture(autouse=True)
-def mock_env_api_keys(monkeypatch, mock_api_key_provider: MockAPIKeyProvider):
-    """
-    Set dummy API keys in the environment.
+def mock_env_api_keys(monkeypatch, mock_api_key_provider):
+    """Set dummy API keys in the environment.
 
-    This fixture is applied automatically to all tests.
+    This fixture is applied automatically to all tests, ensuring that
+    all tests use consistent mock API keys instead of real ones.
 
-    :param monkeypatch: pytest's monkeypatch fixture for modifying the test environment.
-    :param mock_api_key_provider: The MockAPIKeyProvider instance.
-    :return: The MockAPIKeyProvider instance for direct access if needed.
+    Returns: The MockAPIKeyProvider instance for direct access if needed.
     """
     for key, value in mock_api_key_provider.get_all_keys().items():
         monkeypatch.setenv(key, value)
@@ -120,13 +101,10 @@ def mock_env_api_keys(monkeypatch, mock_api_key_provider: MockAPIKeyProvider):
 
 
 @pytest.fixture
-def mock_openai_summary() -> str:
-    """
-    Load mock OpenAI summary from a file.
+def mock_openai_summary():
+    """Load mock OpenAI summary from a file.
 
-    This fixture is primarily used in test_openai_utils.py.
-
-    :return: A string containing the mock summary.
+    Returns: A string containing the mock summary.
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(
@@ -137,9 +115,7 @@ def mock_openai_summary() -> str:
 
 
 class MockTokenProvider:
-    """
-    Centralized provider for mock JWT tokens used in testing.
-    """
+    """Centralized provider for mock JWT tokens used in testing."""
 
     def __init__(self):
         self.secret_key = "test_secret_key"
@@ -147,83 +123,56 @@ class MockTokenProvider:
         self.expire_minutes = 30
 
     def create_access_token(self, data: dict):
-        """
-        Create a mock JWT access token.
-
-        :param data: The data to encode in the token.
-        :return: A mock JWT token.
-        """
+        """Create a mock JWT access token."""
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(minutes=self.expire_minutes)
         to_encode.update({"exp": expire})
         return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
 
     def get_token(self, username: str) -> str:
-        """
-        Get a mock JWT token for a given username.
-
-        :param username: The username to create a token for.
-        :return: A mock JWT token.
-        """
+        """Get a mock JWT token for a given username."""
         return self.create_access_token({"sub": username})
 
 
 @pytest.fixture
-def mock_token_provider() -> MockTokenProvider:
-    """
-    Provide a MockTokenProvider instance.
+def mock_token_provider():
+    """Provide a MockTokenProvider instance.
 
-    This fixture is used globally in various test files.
-
-    :return: An instance of MockTokenProvider.
+    Returns: An instance of MockTokenProvider.
     """
     return MockTokenProvider()
 
 
 @pytest.fixture(autouse=True)
-def mock_env_variables(
-    monkeypatch,
-    mock_api_key_provider: MockAPIKeyProvider,
-    mock_token_provider: MockTokenProvider,
-):
-    """
-    Set dummy environment variables for testing.
+def mock_env_variables(monkeypatch, mock_api_key_provider, mock_token_provider):
+    """Set dummy environment variables for testing.
 
-    This fixture is applied automatically to all tests.
+    This fixture is applied automatically to all tests, ensuring that
+    all tests use consistent mock environment variables instead of real ones.
 
-    :param monkeypatch: pytest's monkeypatch fixture for modifying the test environment.
-    :param mock_api_key_provider: The MockAPIKeyProvider instance.
-    :param mock_token_provider: The MockTokenProvider instance.
-    :return: A tuple containing both providers for direct access if needed.
+    Returns: A tuple containing both providers for direct access if needed.
     """
     # Set API keys
     for key, value in mock_api_key_provider.get_all_keys().items():
         monkeypatch.setenv(key, value)
 
     # Set JWT-related variables
-    # monkeypatch.setenv("SECRET_KEY", mock_token_provider.secret_key)
     mock_secret_key = mock_token_provider.secret_key
     monkeypatch.setenv("SECRET_KEY", mock_secret_key)
-    print(
-        f"Mock SECRET_KEY set to: {mock_secret_key[:5]}..."
-    )  # Print first 5 chars for security
+    print(f"Mock SECRET_KEY set to: {mock_secret_key[:5]}...")  # Print first 5 chars for security
 
     monkeypatch.setenv("ALGORITHM", mock_token_provider.algorithm)
-    monkeypatch.setenv(
-        "ACCESS_TOKEN_EXPIRE_MINUTES", str(mock_token_provider.expire_minutes)
-    )
+    monkeypatch.setenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(mock_token_provider.expire_minutes))
 
     return mock_api_key_provider, mock_token_provider
 
 
 @pytest.fixture
 def user_repository():
-    """
-    Provide a UserJsonRepository instance for testing.
+    """Provide a UserJsonRepository instance for testing.
 
-    This fixture is primarily used in test_json_user_model.py.
-
-    :return: A UserJsonRepository instance.
+    Yields: A repository instance for user operations.
+    Cleanup: After the test, the temporary JSON file used for testing is removed.
     """
     test_file = "test_users.json"
     repo = UserJsonRepository(test_file)
@@ -235,30 +184,19 @@ def user_repository():
 
 @pytest.fixture
 def user_auth_service(user_repository, mock_token_provider):
-    """
-    Provide a UserAuthService instance for testing.
+    """Provide a UserAuthService instance for testing.
 
-    This fixture is primarily used in test_json_user_model.py.
-
-    :param user_repository: The user repository fixture.
-    :param mock_token_provider: The MockTokenProvider instance.
-    :return: A UserAuthService instance with a mock secret key.
+    Returns: An instance with a mock secret key for testing.
     """
-    logger.info(
-        f"Creating UserAuthService with mock secret key: {mock_token_provider.secret_key[:5]}..."
-    )  # Log first 5 chars for security
+    logger.info(f"Creating UserAuthService with mock secret key: {mock_token_provider.secret_key[:5]}...")
     return UserAuthService(user_repository, secret_key=mock_token_provider.secret_key)
 
 
 @pytest.fixture
-def mock_youtube_data() -> Dict:
-    """
-    Fixture providing mock YouTube data.
+def mock_youtube_data():
+    """Fixture providing mock YouTube data.
 
-    This function reads a text file containing mock YouTube data (transcript and metadata)
-    and converts it into a Python dictionary using ast.literal_eval.
-
-    :return: A dictionary containing mock transcript and metadata for testing.
+    Returns: A dictionary containing mock transcript and metadata for testing.
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(

@@ -1,3 +1,5 @@
+"""Tests for the JSON-based User model and UserAuthService."""
+
 import logging
 import os
 
@@ -12,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_create_user(user_repository):
+    """Test creating a user using UserJsonRepository."""
     user = User(
         user_id=None,
         user_name="testuser",
@@ -24,6 +27,7 @@ def test_create_user(user_repository):
 
 
 def test_get_user_by_identifier(user_repository):
+    """Test retrieving a user by identifier using UserJsonRepository."""
     user = User(
         user_id=None,
         user_name="testuser",
@@ -38,6 +42,7 @@ def test_get_user_by_identifier(user_repository):
 
 
 def test_get_user_by_email(user_repository):
+    """Test retrieving a user by email using UserJsonRepository."""
     user = User(
         user_id=None,
         user_name="testuser",
@@ -52,6 +57,7 @@ def test_get_user_by_email(user_repository):
 
 
 def test_update_user(user_repository):
+    """Test updating a user using UserJsonRepository."""
     user = User(
         user_id=None,
         user_name="testuser",
@@ -65,6 +71,7 @@ def test_update_user(user_repository):
 
 
 def test_delete_user(user_repository):
+    """Test deleting a user using UserJsonRepository."""
     user = User(
         user_id=None,
         user_name="testuser",
@@ -77,6 +84,7 @@ def test_delete_user(user_repository):
 
 
 def test_register_user(user_auth_service):
+    """Test user registration using UserAuthService."""
     user = user_auth_service.register_user(
         "testuser", "test@example.com", "password123"
     )
@@ -86,6 +94,7 @@ def test_register_user(user_auth_service):
 
 
 def test_register_duplicate_user(user_auth_service):
+    """Test registering a duplicate user raises UserAlreadyExistsError."""
     user_auth_service.register_user("testuser", "test@example.com", "password123")
     with pytest.raises(UserAlreadyExistsError):
         user_auth_service.register_user(
@@ -94,6 +103,7 @@ def test_register_duplicate_user(user_auth_service):
 
 
 def test_authenticate_user(user_auth_service):
+    """Test user authentication using UserAuthService."""
     user_auth_service.register_user("testuser", "test@example.com", "password123")
     authenticated_user = user_auth_service.authenticate_user("testuser", "password123")
     assert authenticated_user is not None
@@ -104,6 +114,7 @@ def test_authenticate_user(user_auth_service):
 
 
 def test_generate_and_authenticate_token(user_auth_service):
+    """Test token generation and authentication using UserAuthService."""
     logger.info(
         f"Test: SECRET_KEY in environment: {os.getenv('SECRET_KEY')[:5]}..."
     )  # Log first 5 chars for security
@@ -120,9 +131,7 @@ def test_generate_and_authenticate_token(user_auth_service):
     )  # Log first 10 chars of token for debugging
 
     authenticated_user = user_auth_service.authenticate_user_by_token(token)
-    assert (
-        authenticated_user is not None
-    ), "Failed to authenticate user with generated token"
+    assert authenticated_user is not None, "Failed to authenticate user with generated token"
     assert authenticated_user.user_name == "testuser"
 
     # Test with invalid token
