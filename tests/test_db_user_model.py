@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-import tests.db_utils as db_utils
+import utils.db_test_utils as db_utils
 from models.user import User
 from repositories.user_db_repository import UserDBRepository
 from utils.auth_utils import AuthenticationUtils

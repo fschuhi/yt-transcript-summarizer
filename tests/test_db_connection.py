@@ -1,7 +1,7 @@
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
-import tests.db_utils as db_utils
+import utils.db_test_utils as db_utils
 
 
 # test_db_connection.py
