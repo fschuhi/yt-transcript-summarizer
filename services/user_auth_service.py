@@ -2,7 +2,7 @@ from typing import Optional
 
 from models.user import User
 from services.service_interfaces import IUserAuthService, IUserRepository
-from utils.auth_utils import AuthenticationUtils
+from utils.auth_utils import AuthenticationUtils, DEFAULT_SECRET_KEY
 
 
 class UserAlreadyExistsError(ValueError):
@@ -11,8 +11,9 @@ class UserAlreadyExistsError(ValueError):
 
 
 class UserAuthService(IUserAuthService):
-    def __init__(self, user_repository: IUserRepository):
+    def __init__(self, user_repository: IUserRepository, secret_key: str = DEFAULT_SECRET_KEY):
         self.user_repository = user_repository
+        self.secret_key = secret_key
 
     def register_user(self, username: str, email: str, password: str) -> User:
         existing_user = self.user_repository.get_by_identifier(username)
@@ -34,13 +35,13 @@ class UserAuthService(IUserAuthService):
         return None
 
     def authenticate_user_by_token(self, token: str) -> Optional[User]:
-        username = AuthenticationUtils.verify_jwt_token(token)
+        username = AuthenticationUtils.verify_jwt_token(token, secret_key=self.secret_key)
         if username:
             return self.user_repository.get_by_identifier(username)
         return None
 
     def generate_token(self, user: User) -> str:
-        return AuthenticationUtils.generate_jwt_token(user.user_name)
+        return AuthenticationUtils.generate_jwt_token(user.user_name, secret_key=self.secret_key)
 
     def get_user(self, identifier: str) -> Optional[User]:
         return self.user_repository.get_by_identifier(identifier)

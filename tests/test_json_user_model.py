@@ -1,9 +1,13 @@
+import logging
+import os
 import pytest
 
 from models.user import User
 from services.user_auth_service import UserAlreadyExistsError
 from tests.conftest import user_repository, user_auth_service
 from utils.auth_utils import AuthenticationUtils
+
+logger = logging.getLogger(__name__)
 
 
 def test_create_user(user_repository):
@@ -70,10 +74,15 @@ def test_authenticate_user(user_auth_service):
 
 
 def test_generate_and_authenticate_token(user_auth_service):
+    logger.info(f"Test: SECRET_KEY in environment: {os.getenv('SECRET_KEY')[:5]}...")  # Log first 5 chars for security
+    logger.info(f"Test: user_auth_service secret_key: {user_auth_service.secret_key[:5]}...")  # Log first 5 chars for security
+
     user = user_auth_service.register_user("testuser", "test@example.com", "password123")
     token = user_auth_service.generate_token(user)
+    logger.info(f"Test: Generated token: {token[:10]}...")  # Log first 10 chars of token for debugging
+
     authenticated_user = user_auth_service.authenticate_user_by_token(token)
-    assert authenticated_user is not None
+    assert authenticated_user is not None, "Failed to authenticate user with generated token"
     assert authenticated_user.user_name == "testuser"
 
     # Test with invalid token

@@ -5,6 +5,7 @@ import logging
 import os
 from pydantic import BaseModel
 import re
+import sys
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException, Depends, status
@@ -42,7 +43,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.StreamHandler()
+        logging.StreamHandler(sys.stdout)
     ]
 )
 

@@ -220,16 +220,18 @@ def user_repository():
 
 
 @pytest.fixture
-def user_auth_service(user_repository):
+def user_auth_service(user_repository, mock_token_provider):
     """
     Provide a UserAuthService instance for testing.
 
     This fixture is primarily used in test_json_user_model.py.
 
     :param user_repository: The user repository fixture.
-    :return: A UserAuthService instance.
+    :param mock_token_provider: The MockTokenProvider instance.
+    :return: A UserAuthService instance with a mock secret key.
     """
-    return UserAuthService(user_repository)
+    logger.info(f"Creating UserAuthService with mock secret key: {mock_token_provider.secret_key[:5]}...")  # Log first 5 chars for security
+    return UserAuthService(user_repository, secret_key=mock_token_provider.secret_key)
 
 
 @pytest.fixture
