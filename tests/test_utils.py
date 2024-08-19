@@ -24,19 +24,6 @@ def mock_repo_and_auth_service(repo_return_value=None, auth_service_return_value
     return mock_repo, mock_auth_service
 
 
-def create_test_client_with_mocked_deps(mock_repo, mock_auth_service):
-    """
-    Create a TestClient with mocked dependencies.
-
-    :param mock_repo: Mocked repository
-    :param mock_auth_service: Mocked authentication service
-    :return: TestClient instance
-    """
-    with patch('main.get_repository', return_value=mock_repo):
-        with patch('main.UserAuthService', return_value=mock_auth_service):
-            return TestClient(app)
-
-
 def mock_auth_and_get_token(mock_auth_service):
     """
     Mock authentication and token generation.

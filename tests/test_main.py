@@ -2,18 +2,13 @@ import os
 # noinspection PyUnresolvedReferences
 import pytest
 from unittest.mock import patch, MagicMock
-from .conftest import (
-    mock_env_variables,
-    mock_token_provider,
-    mock_api_key_provider,
-    mock_openai_summary,
-    client
-)
+from .conftest import mock_openai_summary, client
 # noinspection PyPackageRequirements
-from jose import jwt
 from repositories.user_json_repository import UserJsonRepository
 from repositories.user_db_repository import UserDBRepository
 import logging
+
+from .test_utils import mock_repo_and_auth_service, mock_auth_and_get_token
 
 logger = logging.getLogger(__name__)
 
@@ -62,11 +57,7 @@ def test_register(client):
         "password": "password123"
     }
 
-    # Create a mock repository
-    mock_repo = MagicMock()
-
-    # Create a mock UserAuthService
-    mock_auth_service = MagicMock()
+    mock_repo, mock_auth_service = mock_repo_and_auth_service()
     mock_auth_service.register_user.return_value = None  # Simulate successful registration
 
     # Patch the get_repository function to return our mock repository
@@ -75,10 +66,11 @@ def test_register(client):
         with patch('main.UserAuthService', return_value=mock_auth_service):
             response = client.post("/register", json=user_data)
 
+    print(f"Response status code: {response.status_code}")
+    print(f"Response content: {response.content}")
+
     assert response.status_code == 200
     assert response.json() == {"message": "User registered successfully"}
-
-    # Assert that register_user was called on our mock auth service
     mock_auth_service.register_user.assert_called_once_with(
         user_data["username"], user_data["email"], user_data["password"]
     )
@@ -90,19 +82,15 @@ def test_login_success(client):
         "password": "password123"
     }
 
-    # Create a mock repository
-    mock_repo = MagicMock()
+    mock_repo, mock_auth_service = mock_repo_and_auth_service()
+    token = mock_auth_and_get_token(mock_auth_service)
 
-    # Create a mock UserAuthService
-    mock_auth_service = MagicMock()
-    mock_auth_service.authenticate_user.return_value = MagicMock()  # Simulate successful authentication
-    mock_auth_service.generate_token.return_value = "dummy_token"
-
-    # Patch the get_repository function to return our mock repository
     with patch('main.get_repository', return_value=mock_repo):
-        # Patch the UserAuthService to return our mock service
         with patch('main.UserAuthService', return_value=mock_auth_service):
             response = client.post("/token", data=login_data)
+
+    print(f"Response status code: {response.status_code}")
+    print(f"Response content: {response.content}")
 
     assert response.status_code == 200
     assert "access_token" in response.json()
@@ -117,18 +105,15 @@ def test_login_failure(client):
         "password": "wrongpassword"
     }
 
-    # Create a mock repository
-    mock_repo = MagicMock()
-
-    # Create a mock UserAuthService
-    mock_auth_service = MagicMock()
+    mock_repo, mock_auth_service = mock_repo_and_auth_service()
     mock_auth_service.authenticate_user.return_value = None  # Simulate failed authentication
 
-    # Patch the get_repository function to return our mock repository
     with patch('main.get_repository', return_value=mock_repo):
-        # Patch the UserAuthService to return our mock service
         with patch('main.UserAuthService', return_value=mock_auth_service):
             response = client.post("/token", data=login_data)
+
+    print(f"Response status code: {response.status_code}")
+    print(f"Response content: {response.content}")
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect username or password"
@@ -155,11 +140,7 @@ def test_summarize_endpoint(mock_summarize_text, mock_get_youtube_data, client, 
     # Make request
     headers = {"Authorization": f"Bearer {dummy_token}"}
 
-    # Create a mock repository
-    mock_repo = MagicMock()
-
-    # Create a mock UserAuthService
-    mock_auth_service = MagicMock()
+    mock_repo, mock_auth_service = mock_repo_and_auth_service()
     mock_auth_service.authenticate_user_by_token.return_value = MagicMock(user_name='testuser')
 
     # Patch the get_repository function to return our mock repository
