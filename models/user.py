@@ -1,3 +1,5 @@
+"""SQLAlchemy model and utility methods for User entities."""
+
 from datetime import datetime
 from typing import Dict, Optional
 
@@ -8,6 +10,8 @@ Base = declarative_base()
 
 
 class User(Base):
+    """SQLAlchemy model for the users table."""
+
     __tablename__ = "users"
 
     user_id = Column(Integer, primary_key=True)
@@ -20,26 +24,32 @@ class User(Base):
     identity_provider = Column(String(30), nullable=True, default="local")
 
     def __init__(
-        self, user_id: Optional[int], user_name: str, email: str, password_hash: str
+            self, user_id: Optional[int], user_name: str, email: str, password_hash: str
     ):
+        """Initialize a User instance.
+
+        Args:
+            user_id: Optional user ID (None for new users).
+            user_name: Unique username.
+            email: User's email address.
+            password_hash: Hashed password.
+        """
         self.user_id = user_id
         self.user_name = user_name
         self.email = email
         self.password_hash = password_hash
 
     def to_dict(self) -> Dict:
+        """Convert User instance to a dictionary.
+
+        Returns: Dictionary representation of the User.
+        """
         return {
             "user_id": self.user_id,
             "user_name": self.user_name,
             "email": self.email,
-            "last_login_date": (
-                self.last_login_date.isoformat() if self.last_login_date else None
-            ),
-            "token_issuance_date": (
-                self.token_issuance_date.isoformat()
-                if self.token_issuance_date
-                else None
-            ),
+            "last_login_date": self.last_login_date.isoformat() if self.last_login_date else None,
+            "token_issuance_date": self.token_issuance_date.isoformat() if self.token_issuance_date else None,
             "token": self.token,
             "password_hash": self.password_hash,
             "identity_provider": self.identity_provider,
@@ -47,22 +57,21 @@ class User(Base):
 
     @classmethod
     def from_dict(cls, data: Dict) -> "User":
+        """Create a User instance from a dictionary.
+
+        Args:
+            data: Dictionary containing user data.
+        Returns: User instance created from the dictionary data.
+        """
         user = cls(
             user_id=data.get("user_id"),
             user_name=data["user_name"],
             email=data["email"],
             password_hash=data["password_hash"],
         )
-        user.last_login_date = (
-            datetime.fromisoformat(data["last_login_date"])
-            if data.get("last_login_date")
-            else None
-        )
-        user.token_issuance_date = (
-            datetime.fromisoformat(data["token_issuance_date"])
-            if data.get("token_issuance_date")
-            else None
-        )
+        user.last_login_date = datetime.fromisoformat(data["last_login_date"]) if data.get("last_login_date") else None
+        user.token_issuance_date = datetime.fromisoformat(data["token_issuance_date"]) if data.get(
+            "token_issuance_date") else None
         user.token = data.get("token")
         user.identity_provider = data.get("identity_provider", "local")
         return user
