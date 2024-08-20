@@ -19,11 +19,12 @@ import uvicorn
 from models.api_models import SummarizeRequest, UserCreate
 from services.user_auth_service import UserAuthService
 from services.dependencies import get_user_auth_service2, get_current_user
+from services.dependencies import get_youtube_service, get_openai_service
+from services.openai_api_service import OpenAIAPIService
+from services.youtube_api_service import YouTubeAPIService
 from utils import openai_utils
 from utils import youtube_utils
-
-# do not change, used in test_summarize_endpoint_authorized for @patch
-#from utils.youtube_utils import get_youtube_data, extract_video_id
+from utils.youtube_utils import extract_video_id
 
 colorama.init()
 load_dotenv()
@@ -126,7 +127,9 @@ async def token_endpoint(
 @app.post("/summarize")
 async def summarize_endpoint(
     summarize_request: SummarizeRequest,
-    current_user: str = Depends(get_current_user)
+    current_user: str = Depends(get_current_user),
+    youtube_service: YouTubeAPIService = Depends(get_youtube_service),
+    openai_service: OpenAIAPIService = Depends(get_openai_service)
 ):
     """Endpoint to summarize a YouTube video transcript.
 
@@ -139,24 +142,25 @@ async def summarize_endpoint(
     logger.info(f"Received summarize request from user: {current_user}")
 
     try:
-        video_id = youtube_utils.extract_video_id(summarize_request.video_url)
+        video_id = extract_video_id(summarize_request.video_url)
         if not video_id:
             logger.error(f"Invalid YouTube URL: {summarize_request.video_url}")
             raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
         logger.info(f"Extracted video ID: {video_id}")
-        youtube_data = youtube_utils.get_youtube_data(video_id)
 
-        if not youtube_data["transcript"]:
+        transcript = youtube_service.get_youtube_transcript(video_id, include_timestamps=False)
+        if not transcript:
             logger.error(f"Failed to retrieve transcript for video ID: {video_id}")
             raise HTTPException(status_code=400, detail="Failed to retrieve transcript")
 
-        full_text = " ".join(youtube_data["transcript"])
-        logger.info(f"Transcript retrieved. Length: {len(full_text)} characters")
+        metadata = youtube_service.get_video_metadata(video_id)
 
-        summary = openai_utils.summarize_text(
-            full_text,
-            youtube_data["metadata"],
+        logger.info(f"Transcript retrieved. Length: {len(' '.join(transcript))} characters")
+
+        summary = openai_service.summarize_text(
+            " ".join(transcript),
+            metadata,
             summarize_request.summary_length,
             summarize_request.used_model,
         )
@@ -167,7 +171,7 @@ async def summarize_endpoint(
         return {
             "summary": summary,
             "word_count": word_count,
-            "metadata": youtube_data["metadata"],
+            "metadata": metadata,
         }
     except Exception as e:
         logger.exception(f"Error in summarize endpoint: {str(e)}")
