@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from utils import youtube_utils, openai_utils
 from .conftest import client, mock_openai_summary
 from .test_utils import mocked_client_post
 
@@ -89,8 +90,8 @@ def test_token_endpoint_login_failure(client: TestClient):
     )
 
 
-@patch("main.youtube_utils.get_youtube_data")
-@patch("main.openai_utils.summarize_text")
+@patch.object(youtube_utils, "get_youtube_data")
+@patch.object(openai_utils, "summarize_text")
 def test_summarize_endpoint_authorized(
         mock_summarize_text: MagicMock,
         mock_get_youtube_data: MagicMock,
@@ -110,27 +111,7 @@ def test_summarize_endpoint_authorized(
     3. Text summarization
     4. Response structure and content verification
 
-    Patching explanation:
-    - We use @patch("main.get_youtube_data") because get_youtube_data is imported
-      directly in the main module.
-    - We use @patch("main.openai_utils.summarize_text") because summarize_text
-      is imported from openai_utils in the main module.
-
-    This difference in patching paths reflects how these functions are imported
-    and used within the main module. It's crucial to patch the objects where they
-    are looked up, not where they are defined.
-
-    We avoid using @patch.object here because:
-    1. @patch.object is typically used when you have direct access to the object
-       you're patching, which isn't the case in a separate test module.
-    2. @patch is more flexible when dealing with imports and module-level functions.
-    3. @patch correctly handles the dynamic nature of Python's import system,
-       ensuring we're mocking the correct objects as seen by the code under test.
-
-    The ordering of patches is important: the innermost decorator corresponds
-    to the leftmost argument in the test function.
-
-    Under the hood:
+    Patching explanation:    Under the hood:
     1. These patches replace the real functions with MagicMock objects.
     2. The MagicMock objects are passed as arguments to our test function.
     3. We configure these mocks to return our predefined test data.
