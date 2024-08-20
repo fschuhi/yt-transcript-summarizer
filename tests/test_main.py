@@ -4,9 +4,10 @@ import logging
 from typing import Dict
 from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import pytest
+
 from services.dependencies import get_current_user, get_youtube_service, get_openai_service
 from services.openai_api_service import OpenAIAPIService
 from services.youtube_api_service import YouTubeAPIService
@@ -15,7 +16,6 @@ from .test_utils import mocked_client_post
 
 from main import app as main_app
 app: FastAPI = main_app
-
 
 logger = logging.getLogger(__name__)
 

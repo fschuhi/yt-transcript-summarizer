@@ -1,7 +1,6 @@
 """Implementation of YouTube API service."""
 
 import os
-import re
 from typing import Dict, List, Union, Optional
 
 from dotenv import load_dotenv

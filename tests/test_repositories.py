@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 from starlette.testclient import TestClient
 
-from repositories.repository_provider import get_repository
 from repositories.user_db_repository import UserDBRepository
 from repositories.user_json_repository import UserJsonRepository
 

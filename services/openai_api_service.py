@@ -1,8 +1,10 @@
 """Implementation of OpenAI service for text summarization."""
 
 import os
+
 from dotenv import load_dotenv
 from openai import OpenAI
+
 from services.service_interfaces import IOpenAIAPIService
 
 load_dotenv()

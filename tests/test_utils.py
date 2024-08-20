@@ -1,7 +1,9 @@
 """Utility functions for testing the FastAPI application."""
 
 from unittest.mock import MagicMock, patch
+
 from fastapi.testclient import TestClient
+
 from .conftest import client
 
 

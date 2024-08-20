@@ -8,8 +8,6 @@ particularly its text summarization capabilities using the OpenAI API.
 from typing import Dict, Any
 from unittest.mock import Mock
 
-from openai import OpenAI
-
 from services.openai_api_service import OpenAIAPIService
 
 

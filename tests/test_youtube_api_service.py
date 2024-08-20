@@ -5,8 +5,13 @@ This module contains tests to ensure the proper functioning of the YouTubeAPISer
 particularly its abilities to fetch video transcripts and metadata using the YouTube API.
 """
 
+import logging
 from unittest.mock import Mock
+
 from services.youtube_api_service import YouTubeAPIService
+
+# Suppress googleapiclient.discovery_cache info messages
+logging.getLogger("googleapiclient.discovery_cache").setLevel(logging.ERROR)
 
 
 def test_get_youtube_data2(mock_youtube_transcript_api, mock_youtube_build, mock_youtube_data):

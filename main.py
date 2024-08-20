@@ -22,9 +22,7 @@ from services.dependencies import get_user_auth_service2, get_current_user
 from services.dependencies import get_youtube_service, get_openai_service
 from services.openai_api_service import OpenAIAPIService
 from services.youtube_api_service import YouTubeAPIService
-from utils import openai_utils
-from utils import youtube_utils
-from utils.youtube_utils import extract_video_id
+from utils.text_utils import extract_video_id
 
 colorama.init()
 load_dotenv()
