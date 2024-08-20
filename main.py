@@ -5,6 +5,7 @@ user registration, authentication, and video summarization. Uses utility functio
 and services for database operations, user auth, and external API interactions.
 """
 
+import argparse
 import logging
 import os
 import re
@@ -18,6 +19,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
+import uvicorn
 
 from repositories.repository_provider import get_repository
 from services.service_interfaces import IUserRepository
@@ -82,8 +84,7 @@ def get_current_user(
         token: The JWT token from the request.
         repo: The user repository for database operations.
     Returns: The username of the authenticated user.
-    Raises:
-        HTTPException: If the credentials are invalid or expired.
+    Raises: HTTPException: If the credentials are invalid or expired.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -137,6 +138,10 @@ async def health_check():
     return {"status": "healthy"}
 
 
+def get_user_auth_service(repo: IUserRepository = Depends(get_repository)):
+    return UserAuthService(repo)
+
+
 @app.post("/register")
 async def register(user: UserCreate, repo: IUserRepository = Depends(get_repository)):
     """Endpoint for user registration.
@@ -145,8 +150,7 @@ async def register(user: UserCreate, repo: IUserRepository = Depends(get_reposit
         user: The user registration data.
         repo: The user repository for database operations.
     Returns: A message indicating successful registration.
-    Raises:
-        HTTPException: If registration fails due to existing username/email or other errors.
+    Raises: HTTPException: If registration fails due to existing username/email or other errors.
     """
     logger.info(f"Received registration request: {user.username}, {user.email}")
     user_auth_service = UserAuthService(repo)
@@ -170,8 +174,7 @@ async def login(
         form_data: The login credentials.
         repo: The user repository for database operations.
     Returns: A dictionary containing the access token and token type.
-    Raises:
-        HTTPException: If login fails due to invalid credentials or other errors.
+    Raises: HTTPException: If login fails due to invalid credentials or other errors.
     """
     logger.info(f"Login attempt received for user: {form_data.username}")
     user_auth_service = UserAuthService(repo)
@@ -208,8 +211,7 @@ async def summarize(
         summarize_request: The request containing video URL and summarization parameters.
         current_user: The authenticated user making the request.
     Returns: A dictionary containing the generated summary, word count, and video metadata.
-    Raises:
-        HTTPException: If there's an error in video ID extraction, transcript retrieval, or summarization.
+    Raises: HTTPException: If there's an error in video ID extraction, transcript retrieval, or summarization.
     """
     logger.info(f"Received summarize request from user: {current_user}")
 
@@ -250,6 +252,8 @@ async def summarize(
 
 
 if __name__ == "__main__":
-    import uvicorn
+    parser = argparse.ArgumentParser(description="Run the FastAPI application")
+    parser.add_argument("--no-reload", action="store_false", dest="reload", help="Disable auto-reload")
+    args = parser.parse_args()
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=args.reload)

@@ -33,7 +33,6 @@ def get_repository(db: Session = Depends(get_db)) -> IUserRepository:
     # Determine repository type: use 'json' in CI, otherwise use the environment variable
     repository_type = "json" if IN_CI else os.getenv("USER_REPOSITORY_TYPE", "json")
     logger.info(f"Creating repository of type: {repository_type}")
-
     if repository_type == "json":
         return UserJsonRepository("users.json")
     elif repository_type == "postgres":
