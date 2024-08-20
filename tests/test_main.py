@@ -89,7 +89,7 @@ def test_token_endpoint_login_failure(client: TestClient):
     )
 
 
-@patch("main.get_youtube_data")
+@patch("main.youtube_utils.get_youtube_data")
 @patch("main.openai_utils.summarize_text")
 def test_summarize_endpoint_authorized(
         mock_summarize_text: MagicMock,

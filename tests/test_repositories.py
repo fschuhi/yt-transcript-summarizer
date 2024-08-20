@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from starlette.testclient import TestClient
 
+from repositories.repository_provider import get_repository
 from repositories.user_db_repository import UserDBRepository
 from repositories.user_json_repository import UserJsonRepository
 
@@ -30,7 +31,7 @@ def test_repository_type(client: TestClient):
         expected_repo = UserJsonRepository("test_users.json")  # Default to JSON
 
     # Patch the get_repository function to return our expected repository
-    with patch("main.get_repository", return_value=expected_repo):
+    with patch("repositories.repository_provider.get_repository", return_value=expected_repo):
         # Make a request to trigger repository creation
         response = client.get("/health")
         assert response.status_code == 200

@@ -7,42 +7,28 @@ and services for database operations, user auth, and external API interactions.
 
 import argparse
 import logging
-import os
-import re
 import sys
-from functools import lru_cache
-from typing import Optional
 
 import colorama
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from fastapi.security import OAuth2PasswordRequestForm
 import uvicorn
 
-from repositories.repository_provider import get_repository
-from services.service_interfaces import IUserRepository
+from models.api_models import SummarizeRequest, UserCreate
 from services.user_auth_service import UserAuthService
+from services.dependencies import get_user_auth_service2, get_current_user
 from utils import openai_utils
+from utils import youtube_utils
 
 # do not change, used in test_summarize_endpoint_authorized for @patch
-from utils.youtube_utils import get_youtube_data
+#from utils.youtube_utils import get_youtube_data, extract_video_id
 
 colorama.init()
 load_dotenv()
 
-app = FastAPI()
-
 # CORS middleware setup
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:8080", "https://vue.fschuhi.de"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -52,80 +38,19 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+app = FastAPI()
 
-
-class SummarizeRequest(BaseModel):
-    """Pydantic model for the summarize request payload."""
-    video_url: str
-    summary_length: int
-    used_model: str
-
-
-class UserCreate(BaseModel):
-    """Pydantic model for user registration payload."""
-    username: str
-    email: str
-    password: str
-
-
-@lru_cache()
-def get_secret_key() -> str:
-    """Retrieve the secret key from environment variables."""
-    return os.getenv("SECRET_KEY")
-
-
-def get_current_user(
-    token: str = Depends(oauth2_scheme), repo: IUserRepository = Depends(get_repository)
-) -> str:
-    """Dependency to get the current authenticated user.
-
-    Args:
-        token: The JWT token from the request.
-        repo: The user repository for database operations.
-    Returns: The username of the authenticated user.
-    Raises: HTTPException: If the credentials are invalid or expired.
-    """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    user_auth_service = UserAuthService(repo)
-    try:
-        user = user_auth_service.authenticate_user_by_token(token)
-        if user is None:
-            raise credentials_exception
-        return user.user_name
-    except Exception:
-        raise credentials_exception
-
-
-def extract_video_id(input_string: str) -> Optional[str]:
-    """Extract the YouTube video ID from various URL formats or direct ID input.
-
-    Args:
-        input_string: The input string containing a YouTube URL or video ID.
-    Returns: The extracted video ID, or None if no valid ID is found.
-    """
-    patterns = [
-        r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)",
-        r"(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)",
-        r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)",
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, input_string)
-        if match:
-            return match.group(1)
-
-    if re.match(r"^[a-zA-Z0-9_-]{11}$", input_string):
-        return input_string
-
-    return None
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080", "https://vue.fschuhi.de"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
-async def read_root(request: Request):
+async def read_root():
     """Forbid access to the root endpoint."""
     logger.info("Received request for root endpoint (forbidden)")
     raise HTTPException(status_code=403, detail="Access to this endpoint is forbidden")
@@ -138,22 +63,20 @@ async def health_check():
     return {"status": "healthy"}
 
 
-def get_user_auth_service(repo: IUserRepository = Depends(get_repository)):
-    return UserAuthService(repo)
-
-
 @app.post("/register")
-async def register(user: UserCreate, repo: IUserRepository = Depends(get_repository)):
+async def register(
+    user: UserCreate,
+    user_auth_service: UserAuthService = Depends(get_user_auth_service2)
+):
     """Endpoint for user registration.
 
     Args:
         user: The user registration data.
-        repo: The user repository for database operations.
+        user_auth_service: injected service which does authentication
     Returns: A message indicating successful registration.
     Raises: HTTPException: If registration fails due to existing username/email or other errors.
     """
     logger.info(f"Received registration request: {user.username}, {user.email}")
-    user_auth_service = UserAuthService(repo)
     try:
         user_auth_service.register_user(user.username, user.email, user.password)
         logger.info(f"User registered successfully: {user.username}")
@@ -166,18 +89,17 @@ async def register(user: UserCreate, repo: IUserRepository = Depends(get_reposit
 @app.post("/token")
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    repo: IUserRepository = Depends(get_repository),
+    user_auth_service: UserAuthService = Depends(get_user_auth_service2)
 ):
     """Endpoint for user login and token generation.
 
     Args:
         form_data: The login credentials.
-        repo: The user repository for database operations.
+        user_auth_service: injected service which does authentication
     Returns: A dictionary containing the access token and token type.
     Raises: HTTPException: If login fails due to invalid credentials or other errors.
     """
     logger.info(f"Login attempt received for user: {form_data.username}")
-    user_auth_service = UserAuthService(repo)
     try:
         user = user_auth_service.authenticate_user(
             form_data.username, form_data.password
@@ -203,7 +125,8 @@ async def login(
 
 @app.post("/summarize")
 async def summarize(
-    summarize_request: SummarizeRequest, current_user: str = Depends(get_current_user)
+    summarize_request: SummarizeRequest,
+    current_user: str = Depends(get_current_user)
 ):
     """Endpoint to summarize a YouTube video transcript.
 
@@ -216,13 +139,13 @@ async def summarize(
     logger.info(f"Received summarize request from user: {current_user}")
 
     try:
-        video_id = extract_video_id(summarize_request.video_url)
+        video_id = youtube_utils.extract_video_id(summarize_request.video_url)
         if not video_id:
             logger.error(f"Invalid YouTube URL: {summarize_request.video_url}")
             raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
         logger.info(f"Extracted video ID: {video_id}")
-        youtube_data = get_youtube_data(video_id)
+        youtube_data = youtube_utils.get_youtube_data(video_id)
 
         if not youtube_data["transcript"]:
             logger.error(f"Failed to retrieve transcript for video ID: {video_id}")

@@ -2,7 +2,8 @@
 
 import logging
 import os
-from typing import Dict, List, Union
+import re
+from typing import Dict, List, Union, Optional
 
 from dotenv import load_dotenv
 # noinspection PyPackageRequirements
@@ -98,3 +99,26 @@ def get_youtube_data(
     transcript = get_youtube_transcript(video_id, include_timestamps=False)
     metadata = get_video_metadata(video_id)
     return {"transcript": transcript, "metadata": metadata}
+
+
+def extract_video_id(input_string: str) -> Optional[str]:
+    """Extract the YouTube video ID from various URL formats or direct ID input.
+
+    Args:
+        input_string: The input string containing a YouTube URL or video ID.
+    Returns: The extracted video ID, or None if no valid ID is found.
+    """
+    patterns = [
+        r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)",
+        r"(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)",
+        r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, input_string)
+        if match:
+            return match.group(1)
+
+    if re.match(r"^[a-zA-Z0-9_-]{11}$", input_string):
+        return input_string
+
+    return None
