@@ -1,7 +1,7 @@
 """Interfaces for user authentication services and user repository operations."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Dict, Union, List
 
 from models.user import User
 
@@ -105,5 +105,42 @@ class IOpenAIAPIService(ABC):
             max_words: Target word count for the summary.
             used_model: OpenAI model to use (default: gpt-3.5-turbo).
         Returns: Summarized text or empty string if an error occurs.
+        """
+        pass
+
+
+class IYouTubeAPIService(ABC):
+    """Interface for YouTube Data API service operations."""
+
+    @abstractmethod
+    def get_youtube_transcript(
+            self, video_id: str, include_timestamps: bool = True
+    ) -> Union[List[Dict[str, Union[str, float]]], List[str]]:
+        """Retrieve the transcript for a YouTube video.
+
+        Args:
+            video_id: The YouTube video ID.
+            include_timestamps: Whether to include timestamps in the output.
+        Returns: List of transcript segments, with or without timestamps.
+        """
+        pass
+
+    @abstractmethod
+    def get_video_metadata(self, video_id: str) -> Dict[str, Union[str, int]]:
+        """Retrieve metadata for a YouTube video using the YouTube Data API.
+
+        Args:
+            video_id: The YouTube video ID.
+        Returns: Dictionary containing video metadata.
+        """
+        pass
+
+    @abstractmethod
+    def extract_video_id(self, input_string: str) -> Optional[str]:
+        """Extract the YouTube video ID from various URL formats or direct ID input.
+
+        Args:
+            input_string: The input string containing a YouTube URL or video ID.
+        Returns: The extracted video ID, or None if no valid ID is found.
         """
         pass
