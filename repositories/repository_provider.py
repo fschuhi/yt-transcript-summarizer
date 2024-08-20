@@ -8,7 +8,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from utils.db_utils import get_db
-from services.service_interfaces import IUserRepository
+from .repository_interfaces import IUserRepository
 from .user_db_repository import UserDBRepository
 from .user_json_repository import UserJsonRepository
 

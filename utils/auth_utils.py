@@ -5,9 +5,10 @@ JWT token creation, and token verification. It uses bcrypt for password hashing
 and jose for JWT operations.
 """
 
+from datetime import datetime, timedelta
+from functools import lru_cache
 import logging
 import os
-from datetime import datetime, timedelta
 from typing import Optional
 
 import bcrypt
@@ -129,3 +130,9 @@ def create_access_token(
 def generate_jwt_token(username: str, secret_key: str = DEFAULT_SECRET_KEY) -> str:
     """Generate a JWT token for a given username. (Wrapper for AuthenticationUtils.generate_jwt_token)"""
     return AuthenticationUtils.generate_jwt_token(username, secret_key)
+
+
+@lru_cache()
+def get_secret_key() -> str:
+    """Retrieve the secret key from environment variables."""
+    return os.getenv("SECRET_KEY")

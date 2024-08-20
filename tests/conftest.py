@@ -5,12 +5,13 @@ import logging
 import os
 from datetime import datetime, timedelta
 from typing import Dict
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from jose import jwt
+from openai import OpenAI
 
 from main import app
 from repositories.user_json_repository import UserJsonRepository
@@ -205,3 +206,45 @@ def mock_youtube_data():
     with open(file_path, "r") as f:
         content = f.read()
     return ast.literal_eval(content)
+
+
+@pytest.fixture
+def mock_youtube_transcript_api():
+    """
+    Fixture to mock the YouTubeTranscriptApi.
+
+    This fixture uses patch to replace the actual YouTubeTranscriptApi with a mock object,
+    allowing us to control its behavior in our tests without making real API calls.
+    """
+    with patch('services.youtube_api_service.YouTubeTranscriptApi') as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_youtube_build():
+    """
+    Fixture to mock the googleapiclient.discovery.build function.
+
+    This fixture replaces the actual 'build' function with a mock, allowing us to
+    control the behavior of the YouTube API client in our tests.
+    """
+    with patch('services.youtube_api_service.build') as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_openai_client():
+    """
+    Fixture to mock OpenAI
+    """
+
+    # Create a mock OpenAI client with the correct structure
+    mock_client = Mock(spec=OpenAI)
+    mock_client.chat = Mock()
+    mock_client.chat.completions = Mock()
+    mock_client.chat.completions.create = Mock()
+    return mock_client
+
+    # Explanation:
+    # We're creating a mock object that mimics the structure of the OpenAI client.
+    # This allows us to control its behavior and verify how it's called without actually making API requests.
