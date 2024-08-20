@@ -10,6 +10,16 @@ load_dotenv()
 _client = None
 
 
+def word_count(s: str) -> int:
+    """Count words in a string using regex.
+
+    Args:
+        s: Input string to count words from.
+    Returns: Number of words in the input string.
+    """
+    return len(re.findall(r"\w+", s))
+
+
 def get_openai_client():
     """Initialize and return the OpenAI client, using the API key from environment.
 
@@ -23,16 +33,6 @@ def get_openai_client():
             raise ValueError("OPENAI_API_KEY environment variable is not set")
         _client = OpenAI(api_key=api_key)
     return _client
-
-
-def word_count(s: str) -> int:
-    """Count words in a string using regex.
-
-    Args:
-        s: Input string to count words from.
-    Returns: Number of words in the input string.
-    """
-    return len(re.findall(r"\w+", s))
 
 
 def summarize_text(text: str, metadata: dict, max_words: int, used_model: str = "gpt-3.5-turbo") -> str:
