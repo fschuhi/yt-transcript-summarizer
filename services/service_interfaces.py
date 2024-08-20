@@ -134,13 +134,3 @@ class IYouTubeAPIService(ABC):
         Returns: Dictionary containing video metadata.
         """
         pass
-
-    @abstractmethod
-    def extract_video_id(self, input_string: str) -> Optional[str]:
-        """Extract the YouTube video ID from various URL formats or direct ID input.
-
-        Args:
-            input_string: The input string containing a YouTube URL or video ID.
-        Returns: The extracted video ID, or None if no valid ID is found.
-        """
-        pass

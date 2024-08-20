@@ -73,20 +73,3 @@ class YouTubeAPIService(IYouTubeAPIService):
         except Exception as e:
             print(f"Error fetching video metadata: {str(e)}")
             return {}
-
-    def extract_video_id(self, input_string: str) -> Optional[str]:
-        # TODO: remove
-        patterns = [
-            r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)",
-            r"(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)",
-            r"(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)",
-        ]
-        for pattern in patterns:
-            match = re.search(pattern, input_string)
-            if match:
-                return match.group(1)
-
-        if re.match(r"^[a-zA-Z0-9_-]{11}$", input_string):
-            return input_string
-
-        return None
