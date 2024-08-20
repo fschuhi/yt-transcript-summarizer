@@ -5,7 +5,7 @@ import os
 from typing import Dict, List, Optional
 
 from models.user import User
-from services.service_interfaces import IUserRepository
+from .repository_interfaces import IUserRepository
 
 
 class UserJsonRepository(IUserRepository):

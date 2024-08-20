@@ -3,7 +3,8 @@
 from typing import Optional
 
 from models.user import User
-from services.service_interfaces import IUserAuthService, IUserRepository
+from repositories.repository_interfaces import  IUserRepository
+from services.service_interfaces import IUserAuthService
 from utils.auth_utils import DEFAULT_SECRET_KEY, AuthenticationUtils
 
 

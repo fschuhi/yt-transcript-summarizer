@@ -5,7 +5,7 @@ from typing import List, Optional, cast
 from sqlalchemy.orm import Session
 
 from models.user import User
-from services.service_interfaces import IUserRepository
+from .repository_interfaces import IUserRepository
 
 
 class UserDBRepository(IUserRepository):
