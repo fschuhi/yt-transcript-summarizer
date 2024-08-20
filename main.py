@@ -50,21 +50,21 @@ app.add_middleware(
 
 
 @app.get("/")
-async def read_root():
+async def root_endpoint():
     """Forbid access to the root endpoint."""
     logger.info("Received request for root endpoint (forbidden)")
     raise HTTPException(status_code=403, detail="Access to this endpoint is forbidden")
 
 
 @app.get("/health")
-async def health_check():
+async def health_endpoint():
     """Endpoint to check the health status of the API."""
     logger.info("Health check endpoint hit")
     return {"status": "healthy"}
 
 
 @app.post("/register")
-async def register(
+async def register_endpoint(
     user: UserCreate,
     user_auth_service: UserAuthService = Depends(get_user_auth_service2)
 ):
@@ -87,7 +87,7 @@ async def register(
 
 
 @app.post("/token")
-async def login(
+async def token_endpoint(
     form_data: OAuth2PasswordRequestForm = Depends(),
     user_auth_service: UserAuthService = Depends(get_user_auth_service2)
 ):
@@ -124,7 +124,7 @@ async def login(
 
 
 @app.post("/summarize")
-async def summarize(
+async def summarize_endpoint(
     summarize_request: SummarizeRequest,
     current_user: str = Depends(get_current_user)
 ):
