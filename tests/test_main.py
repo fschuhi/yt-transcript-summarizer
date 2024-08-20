@@ -96,13 +96,19 @@ def test_token_endpoint_login_failure(client: TestClient):
     )
 
 
-def override_dependency(app: FastAPI, dependency, override_func):
+def override_dependency(fastapi_app: FastAPI, dependency, override_func):
     """
-    Regarding the PyCharm warnings about app.dependency_overrides, these occur because PyCharm's static analysis
-    can't always correctly infer dynamic attributes of FastAPI applications.
+    Override a FastAPI dependency for testing purposes.
+
+    Args:
+        fastapi_app: The FastAPI application instance.
+        dependency: The dependency to override.
+        override_func: The function to use as an override.
+
+    This function is used to replace actual service implementations with mocks during testing.
     """
     # noinspection PyUnresolvedReferences
-    app.dependency_overrides[dependency] = override_func
+    fastapi_app.dependency_overrides[dependency] = override_func
 
 
 def test_summarize_endpoint_authorized(
@@ -110,6 +116,23 @@ def test_summarize_endpoint_authorized(
         mock_openai_summary: str,
         mock_youtube_data: Dict,
 ):
+    """Test the summarize endpoint with valid authorization.
+
+    This test simulates a successful request to summarize a YouTube video transcript.
+    It mocks the YouTube and OpenAI services, as well as user authentication.
+
+    Args:
+        client: The TestClient instance for making requests.
+        mock_openai_summary: A pre-defined mock summary string.
+        mock_youtube_data: A dictionary containing mock YouTube data (transcript and metadata).
+
+    The test performs the following steps:
+    1. Set up mock services for YouTube and OpenAI.
+    2. Override FastAPI dependencies to use these mock services.
+    3. Send a POST request to the /summarize endpoint with test data.
+    4. Assert that the response is correct (status code, summary content, metadata).
+    5. Verify that the mock services were called with the expected arguments.
+    """
     # Setup mock YouTube service
     mock_youtube_service = MagicMock(spec=YouTubeAPIService)
     mock_youtube_service.get_youtube_transcript.return_value = mock_youtube_data['transcript']
@@ -119,47 +142,47 @@ def test_summarize_endpoint_authorized(
     mock_openai_service = MagicMock(spec=OpenAIAPIService)
     mock_openai_service.summarize_text.return_value = mock_openai_summary
 
-    # Mock the authentication
+    # Mock the authenticated user
     mock_current_user = "testuser"
 
-    # Override the dependencies
+    # Override the FastAPI dependencies
+    # This replaces the actual service implementations with our mocks for this test
     override_dependency(app, get_youtube_service, lambda: mock_youtube_service)
     override_dependency(app, get_openai_service, lambda: mock_openai_service)
     override_dependency(app, get_current_user, lambda: mock_current_user)
 
     try:
-        # Test data
+        # Prepare test data for the request
         test_data = {
             "video_url": "https://www.youtube.com/watch?v=py5byOOHZM8",
             "summary_length": 300,
             "used_model": "gpt-4-mini",
         }
 
-        # Create a dummy token for authentication (not actually used, but included for completeness)
+        # Headers to simulate an authenticated request
         headers = {"Authorization": "Bearer dummy_token"}
 
-        # Make the request to the /summarize endpoint
+        # Send POST request to the /summarize endpoint
         response = client.post("/summarize", json=test_data, headers=headers)
         response_json = response.json()
 
-        # Assertions
+        # Assert the response is as expected
         assert response.status_code == 200, "Expected successful response"
         assert response_json["summary"] == mock_openai_summary, "Summary should match the mock data"
-        assert response_json["word_count"] == len(
-            mock_openai_summary.split()), "Word count should match the summary length"
+        assert response_json["word_count"] == len(mock_openai_summary.split()), "Word count should match the summary length"
 
-        # Compare metadata excluding potentially changing fields
+        # Compare metadata, excluding fields that might change (like view_count and like_count)
         assert {k: v for k, v in response_json["metadata"].items() if k not in ['view_count', 'like_count']} == \
                {k: v for k, v in mock_youtube_data["metadata"].items() if k not in ['view_count', 'like_count']}, \
             "Metadata should match the mock YouTube data (excluding view_count and like_count)"
 
-        # Verify that our mock services were called correctly
+        # Verify that our mock services were called with the expected arguments
         mock_youtube_service.get_youtube_transcript.assert_called_once_with("py5byOOHZM8", include_timestamps=False)
         mock_youtube_service.get_video_metadata.assert_called_once_with("py5byOOHZM8")
         mock_openai_service.summarize_text.assert_called_once()
 
     finally:
-        # Clean up the dependency overrides
+        # Clean up: remove the dependency overrides after the test
         # noinspection PyUnresolvedReferences
         app.dependency_overrides.clear()
 
