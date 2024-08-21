@@ -131,15 +131,25 @@ async def summarize_endpoint(
 ):
     """Endpoint to summarize a YouTube video transcript.
 
+    This endpoint processes a request to summarize a YouTube video. It extracts the video ID,
+    retrieves the transcript and metadata, and generates a summary using OpenAI's API.
+
     Args:
         summarize_request: The request containing video URL and summarization parameters.
-        current_user: The authenticated user making the request.
-    Returns: A dictionary containing the generated summary, word count, and video metadata.
-    Raises: HTTPException: If there's an error in video ID extraction, transcript retrieval, or summarization.
+        current_user: The authenticated user making the request (injected by FastAPI).
+        youtube_service: Service for interacting with YouTube API (injected by FastAPI).
+        openai_service: Service for interacting with OpenAI API (injected by FastAPI).
+
+    Returns:
+        A dictionary containing the generated summary, word count, and video metadata.
+
+    Raises:
+        HTTPException: If there's an error in video ID extraction, transcript retrieval, or summarization.
     """
     logger.info(f"Received summarize request from user: {current_user}")
 
     try:
+        # Extract video ID from the provided URL
         video_id = extract_video_id(summarize_request.video_url)
         if not video_id:
             logger.error(f"Invalid YouTube URL: {summarize_request.video_url}")
@@ -147,6 +157,7 @@ async def summarize_endpoint(
 
         logger.info(f"Extracted video ID: {video_id}")
 
+        # Retrieve transcript and metadata
         transcript = youtube_service.get_youtube_transcript(video_id, include_timestamps=False)
         if not transcript:
             logger.error(f"Failed to retrieve transcript for video ID: {video_id}")
@@ -156,6 +167,7 @@ async def summarize_endpoint(
 
         logger.info(f"Transcript retrieved. Length: {len(' '.join(transcript))} characters")
 
+        # Generate summary using OpenAI service
         summary = openai_service.summarize_text(
             " ".join(transcript),
             metadata,
@@ -177,8 +189,12 @@ async def summarize_endpoint(
 
 
 if __name__ == "__main__":
+    # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run the FastAPI application")
     parser.add_argument("--no-reload", action="store_false", dest="reload", help="Disable auto-reload")
     args = parser.parse_args()
 
+    # Run the FastAPI application using uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=args.reload)
+    # Note: The host "0.0.0.0" allows the server to be accessible from any IP address.
+    #       For production, consider using a more restrictive host setting.

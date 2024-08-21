@@ -6,7 +6,6 @@ and jose for JWT operations.
 """
 
 from datetime import datetime, timedelta
-from functools import lru_cache
 import logging
 import os
 from typing import Optional
@@ -104,35 +103,3 @@ class AuthenticationUtils:
             return username
         except jwt.JWTError:
             return None
-
-
-# For backwards compatibility, you might want to keep these function definitions:
-
-def hash_password(password: str) -> str:
-    """Hash a password using bcrypt. (Wrapper for AuthenticationUtils.hash_password)"""
-    return AuthenticationUtils.hash_password(password)
-
-
-def verify_password(password: str, hashed_password: str) -> bool:
-    """Verify a password against its hashed version. (Wrapper for AuthenticationUtils.verify_password)"""
-    return AuthenticationUtils.verify_password(password, hashed_password)
-
-
-def create_access_token(
-    data: dict,
-    secret_key: str = DEFAULT_SECRET_KEY,
-    expires_delta: Optional[timedelta] = None,
-) -> str:
-    """Create a JWT access token. (Wrapper for AuthenticationUtils.create_access_token)"""
-    return AuthenticationUtils.create_access_token(data, secret_key, expires_delta)
-
-
-def generate_jwt_token(username: str, secret_key: str = DEFAULT_SECRET_KEY) -> str:
-    """Generate a JWT token for a given username. (Wrapper for AuthenticationUtils.generate_jwt_token)"""
-    return AuthenticationUtils.generate_jwt_token(username, secret_key)
-
-
-@lru_cache()
-def get_secret_key() -> str:
-    """Retrieve the secret key from environment variables."""
-    return os.getenv("SECRET_KEY")

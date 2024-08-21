@@ -1,7 +1,7 @@
 """Implementation of YouTube API service."""
 
 import os
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union
 
 from dotenv import load_dotenv
 # noinspection PyPackageRequirements

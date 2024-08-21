@@ -2,7 +2,7 @@
 
 import logging
 from typing import Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -169,12 +169,13 @@ def test_summarize_endpoint_authorized(
         # Assert the response is as expected
         assert response.status_code == 200, "Expected successful response"
         assert response_json["summary"] == mock_openai_summary, "Summary should match the mock data"
-        assert response_json["word_count"] == len(mock_openai_summary.split()), "Word count should match the summary length"
+        assert response_json["word_count"] == len(mock_openai_summary.split()), \
+            "Word count should match the summary length"
 
         # Compare metadata, excluding fields that might change (like view_count and like_count)
         assert {k: v for k, v in response_json["metadata"].items() if k not in ['view_count', 'like_count']} == \
                {k: v for k, v in mock_youtube_data["metadata"].items() if k not in ['view_count', 'like_count']}, \
-            "Metadata should match the mock YouTube data (excluding view_count and like_count)"
+               "Metadata should match the mock YouTube data (excluding view_count and like_count)"
 
         # Verify that our mock services were called with the expected arguments
         mock_youtube_service.get_youtube_transcript.assert_called_once_with("py5byOOHZM8", include_timestamps=False)
