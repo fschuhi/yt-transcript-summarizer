@@ -2,6 +2,8 @@
 
 A tool to summarize YouTube videos using their transcripts and AI models.
 
+Apart from this README you find some further project documentation project on [GitHub Pages](https://fschuhi.github.io/yt-transcript-summarizer/).
+
 ## Features
 
 - Summarize YouTube videos using AI models
