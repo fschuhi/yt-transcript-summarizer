@@ -13,13 +13,16 @@ Below is the current list of Python dependencies for this project:
 {% include requirements.txt %}
 ```
 
+The requirements specifically for development purporses are:
+
+```
+{% include requirements-dev.txt %}
+```
+
 ## Other Requirements
 
-You need to have an OpenAI API key (see https://openai.com/index/openai-api) and an API key for the YouTube Data API (https://developers.google.com/youtube/v3).
+Environment variables are supplied by `.env`. As a template, here is `.env.example` which shows the necessary values to supply to the application.
 
-Create a file .env in the root with the following contents
 ```
-API_KEY=key for the API part of the summarizer app
-OPENAI_API_KEY=your OpenAI API key
-YOUTUBE_API_KEY=your YouTube API key
+{% include .env.example %}
 ```
