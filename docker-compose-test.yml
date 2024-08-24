@@ -14,7 +14,7 @@ services:
       - postgres
     env_file:
       - .env.test
-    #command: sh -c "./wait-for-it.sh postgres:5432 -- python utils/bootstrap_db.py && pytest"
+    #command: sh -c "./wait-for-it.sh postgres:5432 -- python scripts/bootstrap_db.py && pytest"
     command: sh -c "./wait-for-it.sh postgres:5432 -- pytest"
 
   postgres:

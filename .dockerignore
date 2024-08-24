@@ -14,3 +14,6 @@ env/
 venv/
 filelist.txt
 dirlist.txt
+output.txt
+errors.txt
+github-errors.txt

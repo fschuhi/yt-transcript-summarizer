@@ -27,7 +27,6 @@ from utils.text_utils import extract_video_id
 colorama.init()
 load_dotenv()
 
-# CORS middleware setup
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -39,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# CORS middleware setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8080", "https://vue.fschuhi.de"],
