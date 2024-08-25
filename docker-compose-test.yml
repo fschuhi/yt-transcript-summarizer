@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   test:
     build:
@@ -10,32 +8,13 @@ services:
     volumes:
       - ${PROJECT_DIR}:${PROJECT_DIR}
     working_dir: ${PROJECT_DIR}
-    depends_on:
-      - postgres
+    networks:
+      - postgres-docker_local-network
     env_file:
       - .env.test
     #command: sh -c "./wait-for-it.sh postgres:5432 -- python scripts/bootstrap_db.py && pytest"
     command: sh -c "./wait-for-it.sh postgres:5432 -- pytest"
 
-  postgres:
-    image: postgres:13
-    environment:
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_DB='postgres'
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./wait-for-it.sh:/wait-for-it.sh
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres-data:
-
+networks:
+     postgres-docker_local-network:
+       external: true

@@ -13,6 +13,6 @@ sqlalchemy>=2.0.31,<3.0.0
 starlette>=0.37.2,<1.0.0
 uvicorn>=0.30.3,<1.0.0
 youtube_transcript_api>=0.6.2,<1.0.0
-psycopg2
+psycopg2-binary
 
 -r requirements-dev.txt
